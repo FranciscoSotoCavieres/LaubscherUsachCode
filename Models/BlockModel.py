@@ -37,7 +37,7 @@ class BlockModel:
         return self.dataset[dataset]
 
     def delete_data_set(self, dataset: str):
-        self.dataset.pop(dataset)
+        self.dataset.pop(dataset)       
 
     def exits_data_set(self, name: str):
         if name in self.get_dataset_names():

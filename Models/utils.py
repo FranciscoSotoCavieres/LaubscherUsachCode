@@ -1,11 +1,11 @@
 from io import StringIO
 import numpy as np
-from math import cos, sin, pi, degrees, radians
-from sympy import Plane, Point3D, Point2D
+from math import cos, sin, radians
 from Models.BlockModel import BlockModel
 from Models.BlockModelStructure import BlockModelStructure
 from Models.Footprint import Footprint
 from Models.Sequence import Sequence
+from typing import Tuple
 
 
 def polygon_area(x: np.ndarray, y: np.ndarray):
@@ -140,10 +140,10 @@ def rotate_point2d(point: np.ndarray, angle_degrees: float, origin: np.ndarray =
     return np.array([qx, qy])
 
 
-def sequence(footprint: Footprint, azimuth_degrees: float):
+def sequence(footprint: Footprint, azimuth_degrees: float) -> Sequence:
     structure = footprint.structure
     corner = structure.get_left_down_near_corner()
-    distance_subscripts: dict[[int, int], float] = dict()
+    distance_subscripts: dict[Tuple[int, int], float] = dict()
     for i in np.arange(structure.shape[0]):
         for j in np.arange(structure.shape[1]):
             centroid = structure.get_centroid(i, j, 0)
@@ -160,4 +160,4 @@ def sequence(footprint: Footprint, azimuth_degrees: float):
         current_index = current_index + 1
 
     sequence = Sequence(sequence_indices, structure)
-    sequence.export_to_excel(r'C:\Users\franc\Desktop\sequence.xlsx')
+    return sequence

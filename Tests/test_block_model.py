@@ -1,8 +1,9 @@
+from genericpath import exists
 import unittest
 import numpy as np
 import pandas as pd
 import pyvista as pv
-
+import os
 from Models.BlockModel import BlockModel
 from Models.BlockModelDilution import BlockModelDilution
 from Models.BlockModelStructure import BlockModelStructure
@@ -14,7 +15,7 @@ import Models.Factory as ft
 class BlockModelShould(unittest.TestCase):
     def test_block_model_load(self):
         # load data
-        file_path = '../test_data/G8.csv'
+        file_path = f'{os.getcwd()}/test_data/G8.csv'
         data = pd.read_csv(file_path, ',')
         print(data.keys())
 
@@ -47,7 +48,7 @@ class BlockModelShould(unittest.TestCase):
 
     def test_block_model_dilution(self):
         # load data
-        file_path = '../test_data/G8.csv'
+        file_path = f'{os.getcwd()}/test_data/G8.csv'
         data = pd.read_csv(file_path, ',')
         print(data.keys())
 
@@ -85,21 +86,21 @@ class BlockModelShould(unittest.TestCase):
         self.valorization(block_model, value_set, accumulated_value_set)
 
         footprint = best_height_of_draw(block_model, accumulated_value_set)
-        footprint.export_to_excel('../test_data/EXCEL.xlsx')
+        footprint.export_to_excel(f'{os.getcwd()}/test_data/EXCEL.xlsx')
 
-        read_footprint = ft.footprint_from_excel('../test_data/EXCEL.xlsx', block_model)
-        sequence(read_footprint,180)
+        read_footprint = ft.footprint_from_excel(f'{os.getcwd()}/test_data/EXCEL.xlsx', block_model)
+        current_sequence = sequence(read_footprint,180)
 
-        print(read_footprint.footprint_indices)
+        current_sequence.export_to_excel(f'{os.getcwd()}/test_data/Sequence.xlsx')
 
     def get_block_model_from_csv(self):
-        file_path = '../test_data/G8.csv'
+        file_path = f'{os.getcwd()}/test_data/G8.csv'
         data = pd.read_csv(file_path, ',')
         block_model = ft.block_model_from_csv_file(file_path, 'X', 'Y', 'Z')
         return block_model
 
     def get_block_model_from_py_file(self):
-        block_model = ft.block_model_from_file('../test_data/G8.npy')
+        block_model = ft.block_model_from_file(f'{os.getcwd()}/test_data/G8.npy')
         return block_model
 
     # noinspection DuplicatedCode
