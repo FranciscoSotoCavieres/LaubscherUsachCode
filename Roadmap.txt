@@ -1,0 +1,6 @@
+Usar https://vedo.embl.es/#gallery para gráficas
+
+Modelo de bloques
+Dilución
+Footprint
+Sequence Manager
