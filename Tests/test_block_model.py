@@ -7,7 +7,7 @@ from Models.BlockModel import BlockModel
 from Models.BlockModelDilution import BlockModelDilution
 from Models.BlockModelStructure import BlockModelStructure
 from Models.visualization import contours, draw_footprint
-from Models.utils import accumulate_values, best_height_of_draw, sequence
+from Models.utils import accumulate_values, best_height_of_draw, sequence_footprint
 import Models.Factory as ft
 
 
@@ -91,10 +91,15 @@ class BlockModelShould(unittest.TestCase):
 
         read_footprint = ft.footprint_from_excel(
             f'{os.getcwd()}/test_data/EXCEL.xlsx', block_model)
-        current_sequence = sequence(read_footprint, 180)
+        current_sequence = sequence_footprint(read_footprint, 180)
 
         current_sequence.export_to_excel(
             f'{os.getcwd()}/test_data/Sequence.xlsx')
+        
+        loaded_sequence = ft.sequence_from_excel(f'{os.getcwd()}/test_data/Sequence.xlsx',block_model)
+        
+        assert current_sequence.sequence_indices[20,20] == loaded_sequence.sequence_indices[20,20]
+        current_sequence.sequence_indices
 
         draw_footprint(read_footprint, block_model,
                        current_sequence.sequence_indices)

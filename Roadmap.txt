@@ -1,6 +1,7 @@
 Usar https://vedo.embl.es/#gallery para gráficas
 
-Modelo de bloques
-Dilución
-Footprint
-Sequence Manager
+Modelo de bloques Check
+Dilución Check
+Footprint Check
+Sequence Manager Check
+Plan de producción

@@ -27,7 +27,8 @@ def best_height_of_draw(block_model: BlockModel, data_set_name: str, min_blocks:
 
     for i in np.arange(x_blocks):
         for j in np.arange(y_blocks):
-            index = best_height_of_draw_column(values[i, j, :], min_blocks, max_blocks, min_value) + 1
+            index = best_height_of_draw_column(
+                values[i, j, :], min_blocks, max_blocks, min_value) + 1
             footprint_indices[i, j] = index
 
     footprint = Footprint(footprint_indices, structure)
@@ -84,7 +85,8 @@ def accumulate_values(array: np.ndarray) -> np.ndarray:
     accumulate_array = np.zeros(array.shape)
     accumulate_array[:, :, 0] = array[:, :, 0]
     for i in np.arange(1, array.shape[2]):
-        accumulate_array[:, :, i] = accumulate_array[:, :, i - 1] + array[:, :, i]
+        accumulate_array[:, :, i] = accumulate_array[:,
+                                                     :, i - 1] + array[:, :, i]
     return accumulate_array
 
 
@@ -140,16 +142,20 @@ def rotate_point2d(point: np.ndarray, angle_degrees: float, origin: np.ndarray =
     return np.array([qx, qy])
 
 
-def sequence(footprint: Footprint, azimuth_degrees: float) -> Sequence:
+def sequence_footprint(footprint: Footprint, azimuth_degrees: float) -> Sequence:
     structure = footprint.structure
+    footprint_indices = footprint.footprint_indices
     corner = structure.get_left_down_near_corner()
     distance_subscripts: dict[Tuple[int, int], float] = dict()
     for i in np.arange(structure.shape[0]):
         for j in np.arange(structure.shape[1]):
+            if footprint_indices[i,j] <= 0:
+                continue
             centroid = structure.get_centroid(i, j, 0)
             centroid = rotate_point2d(centroid, -azimuth_degrees+90, corner)
             distance_subscripts[(i, j)] = centroid[0]
-    distance_subscripts = {k: v for k, v in sorted(distance_subscripts.items(), key=lambda item: item[1])}
+    distance_subscripts = {k: v for k, v in sorted(
+        distance_subscripts.items(), key=lambda item: item[1])}
 
     # Excel File
     sequence_indices = np.ones([structure.shape[0], structure.shape[1]]) * -1

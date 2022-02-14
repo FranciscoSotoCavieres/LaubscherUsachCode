@@ -3,7 +3,7 @@ from openpyxl import Workbook
 from Models.BlockModelStructure import BlockModelStructure
 from Models.excel_utils import export_matrix, remove_default_worksheet
 
-sequence_keyword = 'Sequence'
+SEQUENCE_KEYWORD = 'Sequence'
 
 
 class Sequence():
@@ -32,6 +32,6 @@ class Sequence():
     def export_to_excel(self, filepath):
         workbook = Workbook()
         export_matrix(self.sequence_indices, workbook,
-                      sequence_keyword,  -1)
+                      SEQUENCE_KEYWORD,  -1)
         remove_default_worksheet(workbook)
         workbook.save(filepath)

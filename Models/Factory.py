@@ -4,6 +4,7 @@ from Models.BlockModel import BlockModel, structure_keyword
 from Models.BlockModelStructure import BlockModelStructure
 from Models.Footprint import Footprint, index_keyword
 from openpyxl import workbook, worksheet, load_workbook
+from Models.Sequence import SEQUENCE_KEYWORD, Sequence
 from Models.excel_utils import load_matrix
 
 
@@ -95,3 +96,16 @@ def footprint_from_excel(filepath: str, block_model: BlockModel):
     
     footprint = Footprint(footprint_indices, structure)
     return footprint
+
+def sequence_from_excel(filepath:str,block_model :BlockModel):
+    workbook = load_workbook(filepath)
+    structure = block_model.structure
+    shape = structure.shape
+
+    sequence_indices = load_matrix(
+        workbook, SEQUENCE_KEYWORD, shape[0], shape[1])
+    
+    sequence_indices =np.nan_to_num(sequence_indices,nan=-1)
+    
+    sequence = Sequence(sequence_indices, structure)
+    return sequence    
