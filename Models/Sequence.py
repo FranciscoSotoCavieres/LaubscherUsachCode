@@ -31,8 +31,7 @@ class Sequence():
 
     def export_to_excel(self, filepath):
         workbook = Workbook()
-
         export_matrix(self.sequence_indices, workbook,
-                      sequence_keyword, filepath, -1)
-        workbook.remove(workbook['Sheet'])
+                      sequence_keyword,  -1)
+        remove_default_worksheet(workbook)
         workbook.save(filepath)

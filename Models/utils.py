@@ -147,7 +147,7 @@ def sequence(footprint: Footprint, azimuth_degrees: float) -> Sequence:
     for i in np.arange(structure.shape[0]):
         for j in np.arange(structure.shape[1]):
             centroid = structure.get_centroid(i, j, 0)
-            centroid = rotate_point2d(centroid, azimuth_degrees, corner)
+            centroid = rotate_point2d(centroid, -azimuth_degrees+90, corner)
             distance_subscripts[(i, j)] = centroid[0]
     distance_subscripts = {k: v for k, v in sorted(distance_subscripts.items(), key=lambda item: item[1])}
 

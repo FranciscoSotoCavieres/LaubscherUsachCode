@@ -4,6 +4,7 @@ from Models.BlockModel import BlockModel, structure_keyword
 from Models.BlockModelStructure import BlockModelStructure
 from Models.Footprint import Footprint, index_keyword
 from openpyxl import workbook, worksheet, load_workbook
+from Models.excel_utils import load_matrix
 
 
 def block_model_from_csv_file(filepath: str, x_name: str, y_name: str, z_name: str, separator: str = ',',
@@ -25,7 +26,8 @@ def block_model_from_csv_file(filepath: str, x_name: str, y_name: str, z_name: s
     if data_sets is not None:
         data_keys = data_sets
 
-    structure = BlockModelStructure.from_xyz(np.array(x), np.array(y), np.array(z))
+    structure = BlockModelStructure.from_xyz(
+        np.array(x), np.array(y), np.array(z))
     blockModel = BlockModel(structure)
 
     data_1d_collection: dict[str, np.ndarray] = dict([])
@@ -54,14 +56,16 @@ def block_model_from_level(block_model: BlockModel, level: int) -> BlockModel:
 
     new_block_model = BlockModel(newStructure)
     for dataset_name in block_model.get_dataset_names():
-        new_block_model.add_dataset(dataset_name, block_model.get_data_set(dataset_name)[:, :, level:])
+        new_block_model.add_dataset(
+            dataset_name, block_model.get_data_set(dataset_name)[:, :, level:])
 
     return new_block_model
 
 
 def block_model_from_file(filepath: str) -> BlockModel:
     # noinspection PyTypeChecker
-    data_set_dict: dict[str, np.ndarray] = np.load(filepath, allow_pickle=True).item()
+    data_set_dict: dict[str, np.ndarray] = np.load(
+        filepath, allow_pickle=True).item()
     data_set_keys: list[str] = list(data_set_dict.keys())
     data_set_keys.remove(structure_keyword)
 
@@ -81,14 +85,13 @@ def block_model_from_file(filepath: str) -> BlockModel:
 
 def footprint_from_excel(filepath: str, block_model: BlockModel):
     workbook = load_workbook(filepath)
-    sheet: worksheet = workbook[index_keyword]
     structure = block_model.structure
     shape = structure.shape
 
-    footprint_indices = np.zeros([shape[0], shape[1]]).astype('int')
-    for i in np.arange(structure.shape[0]):
-        for j in np.arange(structure.shape[1]):
-            value = int(sheet.cell(i + 1, j + 1).value)
-            footprint_indices[i, j] = value
+    footprint_indices = load_matrix(
+        workbook, index_keyword, shape[0], shape[1])
+    
+    footprint_indices =np.nan_to_num(footprint_indices,nan=0)
+    
     footprint = Footprint(footprint_indices, structure)
     return footprint

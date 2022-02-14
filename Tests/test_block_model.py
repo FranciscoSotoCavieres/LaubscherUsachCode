@@ -1,4 +1,3 @@
-from genericpath import exists
 import unittest
 import numpy as np
 import pandas as pd
@@ -7,7 +6,7 @@ import os
 from Models.BlockModel import BlockModel
 from Models.BlockModelDilution import BlockModelDilution
 from Models.BlockModelStructure import BlockModelStructure
-from Models.visualization import contours
+from Models.visualization import contours, draw_footprint
 from Models.utils import accumulate_values, best_height_of_draw, sequence
 import Models.Factory as ft
 
@@ -39,7 +38,8 @@ class BlockModelShould(unittest.TestCase):
         grid.spacing = (20, 20, 18)  # These are the cell sizes along each axis
 
         # Add the data values to the cell data
-        grid.cell_data["values"] = values.flatten(order="F")  # Flatten the array!
+        grid.cell_data["values"] = values.flatten(
+            order="F")  # Flatten the array!
 
         # Now plot the grid!
         grid.plot(show_edges=True)
@@ -55,7 +55,8 @@ class BlockModelShould(unittest.TestCase):
         x = data['X']
         y = data['Y']
         z = data['Z']
-        structure = BlockModelStructure.from_xyz(np.array(x), np.array(y), np.array(z))
+        structure = BlockModelStructure.from_xyz(
+            np.array(x), np.array(y), np.array(z))
 
         block_model = ft.block_model_from_csv_file(file_path, 'X', 'Y', 'Z')
 
@@ -88,10 +89,15 @@ class BlockModelShould(unittest.TestCase):
         footprint = best_height_of_draw(block_model, accumulated_value_set)
         footprint.export_to_excel(f'{os.getcwd()}/test_data/EXCEL.xlsx')
 
-        read_footprint = ft.footprint_from_excel(f'{os.getcwd()}/test_data/EXCEL.xlsx', block_model)
-        current_sequence = sequence(read_footprint,180)
+        read_footprint = ft.footprint_from_excel(
+            f'{os.getcwd()}/test_data/EXCEL.xlsx', block_model)
+        current_sequence = sequence(read_footprint, 180)
 
-        current_sequence.export_to_excel(f'{os.getcwd()}/test_data/Sequence.xlsx')
+        current_sequence.export_to_excel(
+            f'{os.getcwd()}/test_data/Sequence.xlsx')
+
+        draw_footprint(read_footprint, block_model,
+                       current_sequence.sequence_indices)
 
     def get_block_model_from_csv(self):
         file_path = f'{os.getcwd()}/test_data/G8.csv'
@@ -100,7 +106,8 @@ class BlockModelShould(unittest.TestCase):
         return block_model
 
     def get_block_model_from_py_file(self):
-        block_model = ft.block_model_from_file(f'{os.getcwd()}/test_data/G8.npy')
+        block_model = ft.block_model_from_file(
+            f'{os.getcwd()}/test_data/G8.npy')
         return block_model
 
     # noinspection DuplicatedCode
@@ -125,7 +132,8 @@ class BlockModelShould(unittest.TestCase):
         # Compute tonnage
         tonnage = density * block_volume
 
-        value_array = ((copper_price - refining_cost) * cut / 100 - (mining_cost + processing_cost)) * tonnage
+        value_array = ((copper_price - refining_cost) * cut /
+                       100 - (mining_cost + processing_cost)) * tonnage
 
         for i in np.arange(shape[0]):
             for j in np.arange(shape[1]):
@@ -140,9 +148,11 @@ class BlockModelShould(unittest.TestCase):
         accumulated_value_array = accumulate_values(value_array)
 
         if block_model.exits_data_set(value_accumulated_set):
-            block_model.update_dataset(value_accumulated_set, accumulated_value_array)
+            block_model.update_dataset(
+                value_accumulated_set, accumulated_value_array)
         else:
-            block_model.add_dataset(value_accumulated_set, accumulated_value_array)
+            block_model.add_dataset(
+                value_accumulated_set, accumulated_value_array)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 import numpy as np
 from openpyxl import Workbook
 from Models.BlockModelStructure import BlockModelStructure
+from Models.excel_utils import export_matrix, remove_default_worksheet
 
 index_keyword = 'Index'
 height_keyword = 'Height'
@@ -24,7 +25,8 @@ class Footprint:
         try:
             # Check dimensions
             if self.footprint_indices.shape[0] != x_blocks or self.footprint_indices.shape[1] != y_blocks:
-                raise Exception('Block model and footprint dimensions doesn''t match')
+                raise Exception(
+                    'Block model and footprint dimensions doesn''t match')
 
             if self.footprint_indices[self.footprint_indices < 0].size > 0 or \
                     self.footprint_indices[self.footprint_indices > z_blocks].size > 0:
@@ -36,25 +38,8 @@ class Footprint:
     def export_to_excel(self, filepath):
         workbook = Workbook()
 
-        worksheet = workbook.create_sheet(index_keyword, 0)
-        workbook.remove(workbook['Sheet'])
-
-        # Feed the indices
-        m_blocks = self.structure.shape[0]
-        n_blocks = self.structure.shape[1]
-        for i in np.arange(m_blocks):
-            for j in np.arange(n_blocks):
-                cell = worksheet.cell(i + 1, j + 1)
-                # TODO: Decoradores
-                cell.value = self.footprint_indices[i, j]
-
-        worksheet = workbook.create_sheet(height_keyword, 1)
-        for i in np.arange(m_blocks):
-            for j in np.arange(n_blocks):
-                cell = worksheet.cell(i + 1, j + 1)
-                # TODO: Decoradores
-                cell.value = self.footprint_height[i, j]
+        export_matrix(self.footprint_indices, workbook, index_keyword, 0)
+        export_matrix(self.footprint_height, workbook, height_keyword, 0)
+        remove_default_worksheet(workbook)
 
         workbook.save(filepath)
-
-
