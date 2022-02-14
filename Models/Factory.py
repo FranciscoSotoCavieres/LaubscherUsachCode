@@ -1,11 +1,15 @@
 import pandas as pd
 import numpy as np
+from Engine.CavingProductionPlanExtractionSpeedItem import CavingProductionPlanExtractionSpeedItem
+from Engine.CavingProductionPlanTarget import CAVING_PLAN_CONFIGURATION_INCORPORATION_COLUMN, CAVING_PLAN_CONFIGURATION_MAXIMUM_PERCENTAGE_COLUMN, CAVING_PLAN_CONFIGURATION_METADATA_SHEET, CAVING_PLAN_CONFIGURATION_MINIMUM_PERCENTAGE_COLUMN, CAVING_PLAN_CONFIGURATION_NAME_CELL, CAVING_PLAN_CONFIGURATION_NUMBER_OF_SPEEDS_CELL, CAVING_PLAN_CONFIGURATION_PERIOD_CELL, CAVING_PLAN_CONFIGURATION_PERIOD_COLUMN, CAVING_PLAN_CONFIGURATION_SPEED_COLUMN, CAVING_PLAN_CONFIGURATION_SPEED_SHEET, CAVING_PLAN_CONFIGURATION_TARGET_COLUMN, CAVING_PLAN_CONFIGURATION_TARGET_SHEET, CavingProductionPlanTarget
+from Engine.CavingProductionPlanTargetItem import CavingProductionPlanTargetItem
 from Models.BlockModel import BlockModel, structure_keyword
 from Models.BlockModelStructure import BlockModelStructure
 from Models.Footprint import Footprint, index_keyword
 from openpyxl import workbook, worksheet, load_workbook
 from Models.Sequence import SEQUENCE_KEYWORD, Sequence
 from Models.excel_utils import load_matrix
+from Engine.CavingProductionPlanTarget import CAVING_PLAN_CONFIGURATION_DURATION_COLUMN
 
 
 def block_model_from_csv_file(filepath: str, x_name: str, y_name: str, z_name: str, separator: str = ',',
@@ -91,21 +95,82 @@ def footprint_from_excel(filepath: str, block_model: BlockModel):
 
     footprint_indices = load_matrix(
         workbook, index_keyword, shape[0], shape[1])
-    
-    footprint_indices =np.nan_to_num(footprint_indices,nan=0)
-    
+
+    footprint_indices = np.nan_to_num(footprint_indices, nan=0)
+
     footprint = Footprint(footprint_indices, structure)
     return footprint
 
-def sequence_from_excel(filepath:str,block_model :BlockModel):
+
+def sequence_from_excel(filepath: str, block_model: BlockModel):
     workbook = load_workbook(filepath)
     structure = block_model.structure
     shape = structure.shape
 
     sequence_indices = load_matrix(
         workbook, SEQUENCE_KEYWORD, shape[0], shape[1])
-    
-    sequence_indices =np.nan_to_num(sequence_indices,nan=-1)
-    
+
+    sequence_indices = np.nan_to_num(sequence_indices, nan=-1)
+
     sequence = Sequence(sequence_indices, structure)
-    return sequence    
+    return sequence
+
+
+def caving_configuration_from_excel(filepath: str) -> CavingProductionPlanTarget:
+    workbook = load_workbook(filepath)
+
+    # Metadata
+    worksheet = workbook[CAVING_PLAN_CONFIGURATION_METADATA_SHEET]
+
+    name = str(worksheet.cell(
+        CAVING_PLAN_CONFIGURATION_NAME_CELL[0], CAVING_PLAN_CONFIGURATION_NAME_CELL[1]).value)
+    number_periods = int(worksheet.cell(
+        CAVING_PLAN_CONFIGURATION_PERIOD_CELL[0], CAVING_PLAN_CONFIGURATION_PERIOD_CELL[1]).value)
+    
+    number_speeds = int(worksheet.cell(
+        CAVING_PLAN_CONFIGURATION_NUMBER_OF_SPEEDS_CELL[0], CAVING_PLAN_CONFIGURATION_NUMBER_OF_SPEEDS_CELL[1]).value)
+
+    # Target
+    target_items: list[CavingProductionPlanTargetItem] = []
+
+    worksheet = workbook[CAVING_PLAN_CONFIGURATION_TARGET_SHEET]
+    for i in np.arange(number_periods):
+        cell = worksheet.cell(i+2, CAVING_PLAN_CONFIGURATION_DURATION_COLUMN)
+        duration_days = float(cell.value)
+
+        cell = worksheet.cell(i+2, CAVING_PLAN_CONFIGURATION_TARGET_COLUMN)
+        target_tonnage = float(cell.value)
+
+        cell = worksheet.cell(
+            i+2, CAVING_PLAN_CONFIGURATION_INCORPORATION_COLUMN)
+        incorporation_blocks = int(cell.value)
+
+        cell = worksheet.cell(i+2, CAVING_PLAN_CONFIGURATION_PERIOD_COLUMN)
+        period = int(cell.value)
+
+        target_items.append(CavingProductionPlanTargetItem(
+            period, target_tonnage, incorporation_blocks, duration_days))
+
+    # Speed
+    speed_items: list[CavingProductionPlanExtractionSpeedItem] = []
+
+    worksheet = workbook[CAVING_PLAN_CONFIGURATION_SPEED_SHEET]
+    for i in np.arange(number_speeds):
+        cell = worksheet.cell(
+            i+2, CAVING_PLAN_CONFIGURATION_MINIMUM_PERCENTAGE_COLUMN)
+        minimum_percentage = float(cell.value)
+
+        cell = worksheet.cell(
+            i+2, CAVING_PLAN_CONFIGURATION_MAXIMUM_PERCENTAGE_COLUMN)
+        maximum_percentage = float(cell.value)
+
+        cell = worksheet.cell(
+            i+2, CAVING_PLAN_CONFIGURATION_SPEED_COLUMN)
+        speed = int(cell.value)
+
+        speed_items.append(CavingProductionPlanExtractionSpeedItem(
+            minimum_percentage, maximum_percentage, speed))
+
+    caving_production_plan_target = CavingProductionPlanTarget(
+        name, target_items, speed_items)
+    return caving_production_plan_target
