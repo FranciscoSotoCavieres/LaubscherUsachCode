@@ -1,4 +1,7 @@
 import unittest
+
+from matplotlib import pyplot as plt
+import numpy as np
 from Engine.CavingProductionPlanExtractionSpeedItem import CavingProductionPlanExtractionSpeedItem
 from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
 import os
@@ -40,3 +43,4 @@ class CavingPlanShould(unittest.TestCase):
         assert caving_production_plan_target.target_items[
             1].target_tonnage == caving_production_plan_target_imported.target_items[1].target_tonnage
         assert caving_production_plan_target_imported.speed_items[1].maximum_percentage == 70
+        
