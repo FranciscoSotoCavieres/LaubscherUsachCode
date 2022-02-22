@@ -1,13 +1,19 @@
 import unittest
-
 from matplotlib import pyplot as plt
 import numpy as np
+from sympy import frac
 from Engine.CavingProductionPlanExtractionSpeedItem import CavingProductionPlanExtractionSpeedItem
 from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
 import os
 import Models.Factory as ft
-
+from Models.BlockModel import BlockModel
 from Engine.CavingProductionPlanTargetItem import CavingProductionPlanTargetItem
+from Engine.ProductionPlanColumn import ProductionPlanColumn
+from Engine.ExtractionPeriodBasicScheduleResult import ExtractionPeriodBasicScheduleResult
+from Models.Footprint import Footprint
+from Models.Sequence import Sequence
+from Models.utils import FootprintSubscript
+import pytest
 
 
 class CavingPlanShould(unittest.TestCase):
@@ -30,7 +36,7 @@ class CavingPlanShould(unittest.TestCase):
             first_item_speed, second_item_speed]
 
         caving_production_plan_target = CavingProductionPlanTarget(
-            plan_name, target_items,speed_items)
+            plan_name, target_items, speed_items)
 
         filepath = f'{os.getcwd()}/test_data/plan_configuration.xlsx'
         caving_production_plan_target.export_to_excel(filepath)
@@ -43,4 +49,54 @@ class CavingPlanShould(unittest.TestCase):
         assert caving_production_plan_target.target_items[
             1].target_tonnage == caving_production_plan_target_imported.target_items[1].target_tonnage
         assert caving_production_plan_target_imported.speed_items[1].maximum_percentage == 70
-        
+
+    def test_column_unit(self):
+        block_model: BlockModel = ft.block_model_from_npy_file(
+            f'{os.getcwd()}/test_data/G8Fixed.npy')
+        footprint: Footprint = ft.footprint_from_excel(
+            f'{os.getcwd()}/test_data/FootprintFixed.xlsx', block_model)
+        sequence = ft.sequence_from_excel(
+            f'{os.getcwd()}/test_data/SequenceFixed.xlsx', block_model)
+
+        density = block_model.get_data_set('Density')
+
+        footprint_subscript = FootprintSubscript(15, 8)
+        value = footprint.footprint_indices[footprint_subscript.i,
+                                            footprint_subscript.j]
+
+        assert value * footprint.structure.block_size[2] == 234
+
+        block_volume = footprint.structure.get_block_volume()
+        block_height = footprint.structure.block_size[2]
+
+        # Extract the whole column
+        production_plan_column = ProductionPlanColumn(
+            footprint, footprint_subscript, sequence, density)
+        target_tonnage = production_plan_column.available_tonnage
+        result = production_plan_column.Extract(target_tonnage, 1)
+        assert result.extracted_tonnage == target_tonnage
+
+        # Extract half a block and then another half
+        fraction = 0.6
+        production_plan_column = ProductionPlanColumn(
+            footprint, footprint_subscript, sequence, density)
+        target_tonnage = density[footprint_subscript.i,
+                                 footprint_subscript.j, 0] * block_volume * fraction
+        result = production_plan_column.Extract(target_tonnage, 1)
+        assert result.extracted_tonnage == target_tonnage
+        assert pytest.approx(
+            production_plan_column.current_meters, 0.01) == block_height * fraction
+        assert pytest.approx(production_plan_column.total_tonnage -
+                             production_plan_column.available_tonnage, 0.01) == target_tonnage
+
+        fraction = 0.4
+        target_tonnage = density[footprint_subscript.i,
+                                 footprint_subscript.j, 0] * block_volume * fraction
+        result = production_plan_column.Extract(target_tonnage, 1)
+        assert result.extracted_tonnage == target_tonnage
+        assert pytest.approx(
+            production_plan_column.current_meters, 0.01) == block_height * 1
+        assert pytest.approx(production_plan_column.total_tonnage -
+                             production_plan_column.available_tonnage, 0.01) == density[footprint_subscript.i,
+                                                                                        footprint_subscript.j, 0] * block_volume
+        pass

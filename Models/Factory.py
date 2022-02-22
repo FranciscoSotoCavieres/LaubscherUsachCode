@@ -33,7 +33,7 @@ def block_model_from_csv_file(filepath: str, x_name: str, y_name: str, z_name: s
 
     structure = BlockModelStructure.from_xyz(
         np.array(x), np.array(y), np.array(z))
-    blockModel = BlockModel(structure)
+    block_model = BlockModel(structure)
 
     data_1d_collection: dict[str, np.ndarray] = dict([])
 
@@ -43,9 +43,9 @@ def block_model_from_csv_file(filepath: str, x_name: str, y_name: str, z_name: s
     # Storage of the dataset
     datasets_3d = structure.get_data_set_from_1D(x, y, z, data_1d_collection)
     for data_key in data_keys:
-        blockModel.add_dataset(data_key, datasets_3d[data_key])
+        block_model.add_dataset(data_key, datasets_3d[data_key])
 
-    return blockModel
+    return block_model
 
 
 def block_model_from_level(block_model: BlockModel, level: int) -> BlockModel:
@@ -67,7 +67,7 @@ def block_model_from_level(block_model: BlockModel, level: int) -> BlockModel:
     return new_block_model
 
 
-def block_model_from_file(filepath: str) -> BlockModel:
+def block_model_from_npy_file(filepath: str) -> BlockModel:
     # noinspection PyTypeChecker
     data_set_dict: dict[str, np.ndarray] = np.load(
         filepath, allow_pickle=True).item()

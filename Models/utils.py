@@ -8,6 +8,16 @@ from Models.Sequence import Sequence
 from typing import Tuple
 
 
+class FootprintSubscript:
+    i : int
+    j : int
+    
+    def __init__(self,i:int,j:int):
+        self.i = i
+        self.j = j
+        
+
+
 def polygon_area(x: np.ndarray, y: np.ndarray):
     return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 

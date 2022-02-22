@@ -69,7 +69,7 @@ class BlockModelShould(unittest.TestCase):
         filepath = r'C:\Users\franc\Desktop\myFile.npy'
         new_block_model.save(filepath)
 
-        block_model = ft.block_model_from_file(filepath)
+        block_model = ft.block_model_from_npy_file(filepath)
         contours(block_model, 'Cut')
 
     def test_accumulate_values(self):
@@ -81,6 +81,30 @@ class BlockModelShould(unittest.TestCase):
         assert accumulated[0, 0, 1] == 2, "Should be 2"
 
     def test_footprint_construction(self):
+        block_model = self.get_block_model_from_py_file()
+        value_set = 'value'
+        accumulated_value_set = 'accumulated_value'
+        self.valorization(block_model, value_set, accumulated_value_set)
+
+        footprint = best_height_of_draw(block_model, accumulated_value_set)
+        footprint.export_to_excel(f'{os.getcwd()}/test_data/Footprint.xlsx')
+
+        read_footprint = ft.footprint_from_excel(
+            f'{os.getcwd()}/test_data/Footprint.xlsx', block_model)
+        current_sequence = sequence_footprint(read_footprint, 180)
+
+        current_sequence.export_to_excel(
+            f'{os.getcwd()}/test_data/Sequence.xlsx')
+        
+        loaded_sequence = ft.sequence_from_excel(f'{os.getcwd()}/test_data/Sequence.xlsx',block_model)
+        
+        assert current_sequence.sequence_indices[20,20] == loaded_sequence.sequence_indices[20,20]
+        current_sequence.sequence_indices
+
+        draw_footprint(read_footprint, block_model,
+                       current_sequence.sequence_indices)
+
+    def test_sequence_construction(self):
         block_model = self.get_block_model_from_py_file()
         value_set = 'value'
         accumulated_value_set = 'accumulated_value'
@@ -103,7 +127,8 @@ class BlockModelShould(unittest.TestCase):
 
         draw_footprint(read_footprint, block_model,
                        current_sequence.sequence_indices)
-
+        
+    # UTILS
     def get_block_model_from_csv(self):
         file_path = f'{os.getcwd()}/test_data/G8.csv'
         data = pd.read_csv(file_path, ',')
@@ -111,7 +136,7 @@ class BlockModelShould(unittest.TestCase):
         return block_model
 
     def get_block_model_from_py_file(self):
-        block_model = ft.block_model_from_file(
+        block_model = ft.block_model_from_npy_file(
             f'{os.getcwd()}/test_data/G8.npy')
         return block_model
 
