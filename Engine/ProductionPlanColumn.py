@@ -60,7 +60,7 @@ class ProductionPlanColumn:
             to_meters = self.column_height_meters
             self.current_meters = self.column_height_meters
             extraction_result = ExtractionPeriodBasicScheduleResult(target_tonnage, 0, target_tonnage, True,
-                                                                    from_meters, to_meters, period_id)
+                                                                    from_meters, to_meters, period_id,self.is_depleted)
             self.results.append(extraction_result)
             return extraction_result
         # Case 1: No enough mass
@@ -72,7 +72,7 @@ class ProductionPlanColumn:
             to_meters = self.column_height_meters
             self.current_meters = self.column_height_meters
             extraction_result = ExtractionPeriodBasicScheduleResult(target_tonnage, 0, tonnage_available, False,
-                                                                    from_meters, to_meters, period_id)
+                                                                    from_meters, to_meters, period_id,self.is_depleted)
             self.results.append(extraction_result)
             return extraction_result
 
@@ -95,7 +95,7 @@ class ProductionPlanColumn:
 
                 extraction_result = ExtractionPeriodBasicScheduleResult(original_target_tonnage, self.available_tonnage,
                                                                         original_target_tonnage, False, from_meters, to_meters,
-                                                                        period_id)
+                                                                        period_id,self.is_depleted)
                 self.results.append(extraction_result)
                 return extraction_result
             else:

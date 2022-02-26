@@ -10,6 +10,7 @@ CAVING_PLAN_CONFIGURATION_METADATA_SHEET = "Metadata"
 CAVING_PLAN_CONFIGURATION_NAME_CELL = (1, 2)
 CAVING_PLAN_CONFIGURATION_PERIOD_CELL = (2, 2)
 CAVING_PLAN_CONFIGURATION_NUMBER_OF_SPEEDS_CELL = (3, 2)
+CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL = (4, 2)
 
 
 CAVING_PLAN_CONFIGURATION_TARGET_SHEET = "Target"
@@ -28,16 +29,17 @@ CAVING_PLAN_CONFIGURATION_SPEED_COLUMN = 3
 
 class CavingProductionPlanTarget:
     name: str
+    denisty_data_set_name: str
     target_items: list[CavingProductionPlanTargetItem]
     speed_items: list[CavingProductionPlanExtractionSpeedItem]
 
-    def __init__(self, name: str, target_items: list[CavingProductionPlanTargetItem], speed_items: list[CavingProductionPlanExtractionSpeedItem]):
+    def __init__(self, name: str, denisty_data_set_name: str, target_items: list[CavingProductionPlanTargetItem], speed_items: list[CavingProductionPlanExtractionSpeedItem]):
         self.name = name
-        
-        target_items.sort(key=lambda x:x.period_number)
+        self.denisty_data_set_name = denisty_data_set_name
+        target_items.sort(key=lambda x: x.period_number)
         self.target_items = target_items
         
-        speed_items.sort(key=lambda x:x.minimum_percentage)
+        speed_items.sort(key=lambda x: x.minimum_percentage)
         self.speed_items = speed_items
 
     def export_to_excel(self, filepath: str):
@@ -64,7 +66,7 @@ class CavingProductionPlanTarget:
         cell = worksheet.cell(
             CAVING_PLAN_CONFIGURATION_PERIOD_CELL[0], CAVING_PLAN_CONFIGURATION_PERIOD_CELL[1])
         cell.value = len(self.target_items)
-        
+
         cell = worksheet.cell(
             CAVING_PLAN_CONFIGURATION_NUMBER_OF_SPEEDS_CELL[0], CAVING_PLAN_CONFIGURATION_NUMBER_OF_SPEEDS_CELL[1] - 1)
         cell.value = 'Speed discretization'
@@ -73,6 +75,16 @@ class CavingProductionPlanTarget:
         cell = worksheet.cell(
             CAVING_PLAN_CONFIGURATION_NUMBER_OF_SPEEDS_CELL[0], CAVING_PLAN_CONFIGURATION_NUMBER_OF_SPEEDS_CELL[1])
         cell.value = len(self.speed_items)
+        
+        
+        cell = worksheet.cell(
+            CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL[0], CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL[1] - 1)
+        cell.value = 'Density'
+        cell.font = Font(bold=True)
+
+        cell = worksheet.cell(
+            CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL[0], CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL[1])
+        cell.value = len(self.denisty_data_set_name)
 
         # Target
         worksheet = workbook.create_sheet(

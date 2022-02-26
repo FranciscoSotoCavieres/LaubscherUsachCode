@@ -19,6 +19,7 @@ import pytest
 class CavingPlanShould(unittest.TestCase):
     def test_caving_target(self):
         plan_name = 'Panel A'
+        density_data_set_name = "Density"
 
         # Target
         first_item_target = CavingProductionPlanTargetItem(1, 1e6, 10, 360)
@@ -36,7 +37,7 @@ class CavingPlanShould(unittest.TestCase):
             first_item_speed, second_item_speed]
 
         caving_production_plan_target = CavingProductionPlanTarget(
-            plan_name, target_items, speed_items)
+            plan_name, density_data_set_name, target_items, speed_items)
 
         filepath = f'{os.getcwd()}/test_data/plan_configuration.xlsx'
         caving_production_plan_target.export_to_excel(filepath)
@@ -49,8 +50,12 @@ class CavingPlanShould(unittest.TestCase):
         assert caving_production_plan_target.target_items[
             1].target_tonnage == caving_production_plan_target_imported.target_items[1].target_tonnage
         assert caving_production_plan_target_imported.speed_items[1].maximum_percentage == 70
+        assert caving_production_plan_target.denisty_data_set_name == density_data_set_name
 
     def test_column_unit(self):
+        
+       
+        
         block_model: BlockModel = ft.block_model_from_npy_file(
             f'{os.getcwd()}/test_data/G8Fixed.npy')
         footprint: Footprint = ft.footprint_from_excel(
@@ -82,7 +87,7 @@ class CavingPlanShould(unittest.TestCase):
             footprint, footprint_subscript, sequence, density)
         target_tonnage = density[footprint_subscript.i,
                                  footprint_subscript.j, 0] * block_volume * fraction
-        result = production_plan_column.Extract(target_tonnage, 1)
+        result = production_plan_column.Extract(target_tonnage, 2)
         assert result.extracted_tonnage == target_tonnage
         assert pytest.approx(
             production_plan_column.current_meters, 0.01) == block_height * fraction
@@ -92,11 +97,19 @@ class CavingPlanShould(unittest.TestCase):
         fraction = 0.4
         target_tonnage = density[footprint_subscript.i,
                                  footprint_subscript.j, 0] * block_volume * fraction
-        result = production_plan_column.Extract(target_tonnage, 1)
+        result = production_plan_column.Extract(target_tonnage, 3)
         assert result.extracted_tonnage == target_tonnage
         assert pytest.approx(
             production_plan_column.current_meters, 0.01) == block_height * 1
         assert pytest.approx(production_plan_column.total_tonnage -
                              production_plan_column.available_tonnage, 0.01) == density[footprint_subscript.i,
                                                                                         footprint_subscript.j, 0] * block_volume
-        pass
+        # Extract the whole column
+        available_tonnage = production_plan_column.available_tonnage
+        result = production_plan_column.Extract(1e10, 2)
+        assert result.was_target_accomplished == False
+        assert result.tonnage_available == 0
+        assert result.is_depleted == True
+        assert pytest.approx(result.extracted_tonnage,
+                             0.01) == pytest.approx(available_tonnage, 0.01)
+        assert result.tonnage_available == 0
