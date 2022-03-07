@@ -1,157 +1,126 @@
 import numpy as np
 from Constants import NumericConstants
+from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
+from Engine.ProductionPlanColumn import ProductionPlanColumn
+
+
+class MaximumExtractionInformation:
+    """Maximum extraction informtion per query
+    """
+    days_of_extraction: float
+    out_of_range: bool
+    if_extracted_is_depleted: bool
+    maximum_tonnage: float
+
+    def __init__(self, days_of_extraction: float, out_of_range: bool,
+                 if_extracted_is_depleted: bool, maximum_tonnage: float):
+        self.days_of_extraction = days_of_extraction
+        self.out_of_range = out_of_range
+        self.if_extracted_is_depleted = if_extracted_is_depleted
+        self.maximum_tonnage = maximum_tonnage
+
 
 class ColumnMaximumExtractionEngine:
+    _days: list[float]
+    _maximum_extraction_tonnage: list[float]
+    _last_day: float
 
-    _days: np.ndarray[float]
-    _maximum_extraction_tonnage: np.ndarray[float]
-    last_day: float
+    def __init__(self, column: ProductionPlanColumn, target: CavingProductionPlanTarget):
+        self._days = []
+        self._maximum_extraction_tonnage = []
+        self._last_day = []
 
-    def __init__(self, days: np.ndarray[float], maximum_extraction_tonnage: np.ndarray[float], last_day: float):
-        self._days = days
-        self._maximum_extraction_tonnage = maximum_extraction_tonnage
-        self.last_day = last_day
-        
-    
-        
+        column_tonnage = column.total_tonnage
+        column_area = column.area
 
-#         public static int IndexOf(double value, double[] array)
-#         {
-#             for (var i = 0; i < (array.Length - 1); i++)
-#                 if (array[i] - Tolerance <= value && value <= array[i + 1] + Tolerance)
-#                     return i;
-#             return -1;
-#         }
+        self._days.append(0)
+        self._maximum_extraction_tonnage.append(0)
 
+        current_mass = 0
+        current_day = 0
+        for i in np.arange(len(target.speed_items)):
+            speed_item = target.speed_items[i]
+            extraction_speed = speed_item.extraction_tonnes_per_day_squared_meters
+            tonnage = column_tonnage * \
+                (speed_item.maximum_percentage -
+                 speed_item.minimum_percentage) / 100
 
-#   public class MaximumExtractionEngine
-#     {
-#         /// <summary>
-#         /// Gets or sets the days.
-#         /// </summary>
-#         /// <value>
-#         /// The days.
-#         /// </value>
-#         private double[] Days { get; set; }
-#         /// <summary>
-#         /// Gets or sets the maximum extraction.
-#         /// </summary>
-#         /// <value>
-#         /// The maximum extraction.
-#         /// </value>
-#         private double[] MaximumExtraction { get; set; }
+            current_day = current_day + tonnage / \
+                (extraction_speed * column_area)
+            current_mass = current_mass + tonnage
+            self._days.append(current_day)
+            self._maximum_extraction_tonnage.append(current_mass)
 
-#         /// <summary>
-#         /// Gets or sets the last day.
-#         /// </summary>
-#         /// <value>
-#         /// The last day.
-#         /// </value>
-#         public double LastDay { get; private set; }
+        self._last_day = self._days[len(self._days) - 1]
 
-#         /// <summary>
-#         /// Gets or sets the linear interpolator.
-#         /// </summary>
-#         /// <value>
-#         /// The linear interpolator.
-#         /// </value>
-#         private LinearInterpolation LinearInterpolator { get; set; } = new LinearInterpolation();
+    def get_maximum_extraction(self, days_of_extraction: float, initial_day: float) -> MaximumExtractionInformation:
+        """Maximum tonnage available
 
-#         /// <summary>
-#         /// The tolerance
-#         /// </summary>
-#         public const double Tolerance = 0.01;
+        Args:
+            days_of_extraction (float): days in which the column will extract
+            initial_day (float): current day
 
-#         /// <summary>
-#         /// Initializes a new instance of the <see cref="MaximumExtractionEngine"/> class.
-#         /// </summary>
-#         /// <param name="days">The days.</param>
-#         /// <param name="maximumExtraction">The maximum extraction.</param>
-#         /// <param name="lastDay">The last day.</param>
-#         public MaximumExtractionEngine(double[] days, double[] maximumExtraction, double lastDay)
-#         {
-#             Days = days;
-#             MaximumExtraction = maximumExtraction;
-#             LastDay = lastDay;
-#         }
-#         /// <summary>
-#         /// Gets the maximum extraction.
-#         /// </summary>
-#         /// <param name="daysOfExtraction">The days of extraction.</param>
-#         /// <param name="initialDay">The initial day.</param>
-#         /// <returns></returns>
-#         public MaximumExtractionInformation GetMaximumExtraction(double daysOfExtraction, double initialDay)
-#         {
-#             var information = new MaximumExtractionInformation();
-#             if (initialDay + daysOfExtraction > LastDay)
-#             {
-#                 information.OutOfRange = true;
-#                 information.IfExtractedDepleted = true;
-#                 information.DaysOfExtraction = LastDay - initialDay;
-#                 information.MaximumTonnage = GetTonnage(LastDay) - GetTonnage(initialDay);
-#             }
-#             else
-#             {
+        Returns:
+            MaximumExtractionInformation: _description_
+        """
+        if (initial_day + days_of_extraction > self._last_day):
+            out_of_range = True
+            if_extracted_depleted = True
+            days_of_extraction = self._last_day - initial_day
+            maximum_tonnage = self.get_tonnage(
+                self._last_day) - self.get_tonnage(initial_day)
+            return MaximumExtractionInformation(days_of_extraction, out_of_range, if_extracted_depleted, maximum_tonnage)
+        else:
+            actual_tonnage = self.get_tonnage(initial_day)
+            final_tonnage = self.get_tonnage(initial_day + days_of_extraction)
+            maximum_tonnage = final_tonnage - actual_tonnage
 
-#                 var actualTonnage = GetTonnage(initialDay);
-#                 var finalTonnage = GetTonnage(initialDay + daysOfExtraction);
-#                 information.DaysOfExtraction = daysOfExtraction;
-#                 information.IfExtractedDepleted = false;
-#                 information.OutOfRange = false;
-#                 information.MaximumTonnage = finalTonnage - actualTonnage;
-#             }
-#             return information;
-#         }
+            return MaximumExtractionInformation(days_of_extraction=days_of_extraction, if_extracted_is_depleted=False,
+                                                maximum_tonnage=maximum_tonnage, out_of_range=False)
 
-#         /// <summary>
-#         /// Gets the day.
-#         /// </summary>
-#         /// <param name="tonnage">The tonnage.</param>
-#         /// <returns></returns>
-#         public double GetDay(double tonnage)
-#         {
-#             int index = IndexOf(tonnage, MaximumExtraction);
-#             IndexCheck(index);
-#             LinearInterpolator.computeCoefficients(Days[index], MaximumExtraction[index],
-#                                                    Days[index + 1], MaximumExtraction[index + 1]);
-#             return LinearInterpolator.computeXValue(tonnage);
-#         }
+    def get_day(self, tonnage: float) -> float:
+        """Get interpolated day from tonnage
 
-#         /// <summary>
-#         /// Gets the tonnage.
-#         /// </summary>
-#         /// <param name="day">The day.</param>
-#         /// <returns></returns>
-#         public double GetTonnage(double day)
-#         {
-#             var index = IndexOf(day, Days);
-#             IndexCheck(index);
-#             LinearInterpolator.computeCoefficients(Days[index], MaximumExtraction[index],
-#                                                    Days[index + 1], MaximumExtraction[index + 1]);
-#             return LinearInterpolator.computeYValue(day);
-#         }
+        Args:
+            tonnage (float): tonnage to interpolate
 
-#         /// <summary>
-#         /// Indexes the check.
-#         /// </summary>
-#         /// <param name="index">The index.</param>
-#         /// <exception cref="Exception">Index outside boundaries</exception>
-#         private static void IndexCheck(int index)
-#         {
-#             if (index == -1)
-#                 throw new Exception("Index outside boundaries");
-#         }
-#         /// <summary>
-#         /// Indexes the of.
-#         /// </summary>
-#         /// <param name="value">The value.</param>
-#         /// <param name="array">The array.</param>
-#         /// <returns></returns>
-#         public static int IndexOf(double value, double[] array)
-#         {
-#             for (var i = 0; i < (array.Length - 1); i++)
-#                 if (array[i] - Tolerance <= value && value <= array[i + 1] + Tolerance)
-#                     return i;
-#             return -1;
-#         }
-#     }
+        Returns:
+            float: interpolated day
+        """
+        index = ColumnMaximumExtractionEngine._index_of(
+            tonnage, self._maximum_extraction_tonnage)
+        ColumnMaximumExtractionEngine._index_raise_error(index)
+        xp = [self._maximum_extraction_tonnage[index],
+              self._maximum_extraction_tonnage[index+1]]
+        yp = [self._days[index], self._days[index+1]]
+        day = np.interp(tonnage, xp=xp, yp=yp)
+        return day
+
+    def get_tonnage(self, day: float) -> float:
+        """Get the interpolated tonnage from a day
+
+        Args:
+            day (float): day to interpolate
+
+        Returns:
+            float: interpolated tonnage
+        """
+        index = ColumnMaximumExtractionEngine._index_of(day, self._days)
+        ColumnMaximumExtractionEngine._index_raise_error(index)
+        xp = [self._days[index], self._days[index+1]]
+        yp = [self._maximum_extraction_tonnage[index],
+              self._maximum_extraction_tonnage[index+1]]
+        tonnage = np.interp(day, xp=xp,fp=yp)
+        return tonnage
+
+    @staticmethod
+    def _index_raise_error(index: int):
+        if (index == -1):
+            raise Exception("Invalid index")
+
+    @staticmethod
+    def _index_of(value: float, array: list[float]) -> int:
+        for i in np.arange(len(array)-1):
+            if (array[i] - NumericConstants.MIN_VALUE <= value and value <= array[i+1] + NumericConstants.MIN_VALUE):
+                return i
+        return -1

@@ -1,1 +1,1 @@
-MIN_VALUE : float = 0.00001
+MIN_VALUE : float = 0.0001
