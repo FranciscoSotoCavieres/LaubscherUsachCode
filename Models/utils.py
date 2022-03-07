@@ -1,21 +1,21 @@
 from io import StringIO
+from Constants import NumericConstants
 import numpy as np
 from math import cos, sin, radians
 from Models.BlockModel import BlockModel
 from Models.BlockModelStructure import BlockModelStructure
 from Models.Footprint import Footprint
 from Models.Sequence import Sequence
-from typing import Tuple
+from typing import Tuple, final
 
 
 class FootprintSubscript:
-    i : int
-    j : int
-    
-    def __init__(self,i:int,j:int):
+    i: int
+    j: int
+
+    def __init__(self, i: int, j: int):
         self.i = i
         self.j = j
-        
 
 
 def polygon_area(x: np.ndarray, y: np.ndarray):
@@ -159,7 +159,7 @@ def sequence_footprint(footprint: Footprint, azimuth_degrees: float) -> Sequence
     distance_subscripts: dict[Tuple[int, int], float] = dict()
     for i in np.arange(structure.shape[0]):
         for j in np.arange(structure.shape[1]):
-            if footprint_indices[i,j] <= 0:
+            if footprint_indices[i, j] <= 0:
                 continue
             centroid = structure.get_centroid(i, j, 0)
             centroid = rotate_point2d(centroid, -azimuth_degrees+90, corner)
@@ -177,3 +177,63 @@ def sequence_footprint(footprint: Footprint, azimuth_degrees: float) -> Sequence
 
     sequence = Sequence(sequence_indices, structure)
     return sequence
+
+
+def change_block_dimension(block_model: BlockModel, dim_x: float, dim_y: float, dim_z: float) -> BlockModel:
+    cloned_block_model: BlockModel = block_model.clone()
+    cloned_block_model.structure.block_size = np.array([dim_x, dim_y, dim_z])
+    return cloned_block_model
+
+
+def get_average(initial_fraction: float, final_fraction, values_1d: np.ndarray, weights_1d: np.ndarray) -> float:
+
+    # Case same block
+    if (np.abs(initial_fraction - final_fraction) < NumericConstants.MIN_VALUE):
+        return 0.0
+    if (np.abs(np.floor(initial_fraction) - np.floor(final_fraction)) < NumericConstants.MIN_VALUE):
+        return values_1d[int(initial_fraction)]
+
+    # External values
+    value_1 = values_1d[int(initial_fraction)]
+    weight_1 = weight_1[int(final_fraction)]
+    fraction_1 = 1 - (initial_fraction % 1)
+
+    value_2 = values_1d[int(final_fraction)]
+    weight_2 = weights_1d[int(final_fraction)]
+    fraction_2 = final_fraction % 1
+
+    # Adjacent blocks
+    if (np.abs(np.floor(final_fraction) - np.floor(initial_fraction)-1) < NumericConstants.MIN_VALUE):
+        average = (value_1 * weight_1 * fraction_1 + value_2 * weight_2 * fraction_2) /   (weight_1 * fraction_1 + fraction_2 * weight_2)
+        if (np.isnan(average)):
+            return 0.0
+        return average
+
+    # Middle values
+    medium_values :list[float]= []
+    medium_weights  :list[float]= []
+    
+    start_index = int(np.ceil(initial_fraction))
+    end_index = int(np.floor(final_fraction))
+    for i in np.arange(start_index,end_index):
+        medium_values.append(values_1d[i])
+        medium_weights.append(weights_1d[i])
+        
+    if (np.abs(initial_fraction % 1) < NumericConstants.MIN_VALUE):
+        fraction_1 = 0;
+    if (np.abs(final_fraction % 1) < NumericConstants.MIN_VALUE):
+        fraction_2 = 1;
+
+    numerator = (value_1 * weight_1 * fraction_1 + value_2 * weight_2 * fraction_2);
+    denominator = (weight_1 * fraction_1 + fraction_2 * weight_2)
+    
+    for weight in medium_weights:
+        denominator = denominator + weight
+        
+    for (value,weight) in zip(medium_values,medium_weights):
+        numerator = numerator + value * weight
+
+    if np.abs(denominator) < NumericConstants.MIN_VALUE:
+        return 0
+    return numerator / denominator
+
