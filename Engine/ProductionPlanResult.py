@@ -1,15 +1,22 @@
-import csv
 from Models import utils
-from pandas import period_range
 from Engine.ExtractionPeriodBasicScheduleResult import ExtractionPeriodBasicScheduleResult
+from Models.BlockModel import BlockModel
 
 
 class ProductionPlanResult:
+    
+    block_model : BlockModel
     units: list[ExtractionPeriodBasicScheduleResult]
 
-    def __init__(self, units: list[ExtractionPeriodBasicScheduleResult]):
+
+    def __init__(self, units: list[ExtractionPeriodBasicScheduleResult],block_model:BlockModel,
+                 average_sets:list[str] = None, summation_sets:list[str] = None):
+        # TODO: Agregar al config.
         self.units = units
-        utils.get_column_average()
+        self.block_model
+        
+        
+        
 
     def dump_units(self, filepath: str):
         """Dump all units
