@@ -11,7 +11,7 @@ from Engine.CavingProductionPlanTargetItem import CavingProductionPlanTargetItem
 from Engine.ProductionPlanColumn import ProductionPlanColumn
 from Models.Footprint import Footprint
 from Models.Sequence import Sequence
-from Models.utils import FootprintSubscript
+from Models.utils import FootprintSubscript, get_average, get_summation
 import pytest
 from Engine.ProductionPlanEngine import ProductionPlanEngine
 
@@ -144,7 +144,48 @@ class CavingPlanShould(unittest.TestCase):
         production_plan_engine = ProductionPlanEngine(
             block_model, footprint, sequence, target)
         production_plan_result = production_plan_engine.process()
-        
-        production_plan_result.dump_units('C:/Users/franc/Desktop/Result Production.csv')
-        
-        
+
+        production_plan_result.dump_units(
+            'C:/Users/franc/Desktop/Result Production.csv')
+
+    def test_column_average_fixture(self):
+        column_values = np.array([1, 2, 3, 4, 5])
+        column_weights = np.array([0.5, 0.6, 0.7, 0.8, 0.9])
+
+        value = get_average(values_1d=column_values,
+                            weights_1d=column_weights,
+                            initial_fraction=0.2, final_fraction=1.2)
+
+        test_value = (1 * 0.5 * 0.8 + 2 * 0.6 * 0.2)/(0.5 * 0.8 + 0.6 * 0.2)
+        assert np.abs(value - test_value) < 0.001
+
+        value = get_average(values_1d=column_values,
+                            weights_1d=column_weights,
+                            initial_fraction=1.2, final_fraction=3.6)
+        test_value = (2 * 0.6 * 0.8 + 3 * 0.7 * 1 + 4 *
+                      0.8 * 0.6)/(0.6 * 0.8 + 0.7 * 1 + 0.8 * 0.6)
+        assert np.abs(value - test_value) < 0.001
+
+    def test_column_summation_fixture(self):
+        column_values = np.array([1, 2, 3, 4, 5])
+
+        value = get_summation(values_1d=column_values,
+                              initial_fraction=0.2, final_fraction=1.2)
+
+        test_value = 1 * 0.8 + 2 * 0.2
+        assert np.abs(value - test_value) < 0.001
+
+        value = get_summation(values_1d=column_values,
+                              initial_fraction=1.2, final_fraction=3.6)
+        test_value = 2 * 0.8 + 3 + 4 * 0.6
+        assert np.abs(value - test_value) < 0.001
+
+        value = get_summation(values_1d=column_values,
+                              initial_fraction=1, final_fraction=3)
+        test_value = 2+3
+        assert np.abs(value - test_value) < 0.001
+
+        value = get_summation(values_1d=column_values,
+                              initial_fraction=1, final_fraction=3.1)
+        test_value = 2+3 + 4*0.1
+        assert np.abs(value - test_value) < 0.001

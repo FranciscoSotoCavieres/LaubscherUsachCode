@@ -195,7 +195,7 @@ def get_average(initial_fraction: float, final_fraction, values_1d: np.ndarray, 
 
     # External values
     value_1 = values_1d[int(initial_fraction)]
-    weight_1 = weight_1[int(final_fraction)]
+    weight_1 = weights_1d[int(initial_fraction)]
     fraction_1 = 1 - (initial_fraction % 1)
 
     value_2 = values_1d[int(final_fraction)]
@@ -204,36 +204,82 @@ def get_average(initial_fraction: float, final_fraction, values_1d: np.ndarray, 
 
     # Adjacent blocks
     if (np.abs(np.floor(final_fraction) - np.floor(initial_fraction)-1) < NumericConstants.MIN_VALUE):
-        average = (value_1 * weight_1 * fraction_1 + value_2 * weight_2 * fraction_2) /   (weight_1 * fraction_1 + fraction_2 * weight_2)
+        average = (value_1 * weight_1 * fraction_1 + value_2 * weight_2 *
+                   fraction_2) / (weight_1 * fraction_1 + fraction_2 * weight_2)
         if (np.isnan(average)):
             return 0.0
         return average
 
     # Middle values
-    medium_values :list[float]= []
-    medium_weights  :list[float]= []
-    
+    medium_values: list[float] = []
+    medium_weights: list[float] = []
+
     start_index = int(np.ceil(initial_fraction))
     end_index = int(np.floor(final_fraction))
-    for i in np.arange(start_index,end_index):
+    for i in np.arange(start_index, end_index):
         medium_values.append(values_1d[i])
         medium_weights.append(weights_1d[i])
-        
-    if (np.abs(initial_fraction % 1) < NumericConstants.MIN_VALUE):
-        fraction_1 = 0;
-    if (np.abs(final_fraction % 1) < NumericConstants.MIN_VALUE):
-        fraction_2 = 1;
 
-    numerator = (value_1 * weight_1 * fraction_1 + value_2 * weight_2 * fraction_2);
+    if (np.abs(initial_fraction % 1) < NumericConstants.MIN_VALUE):
+        fraction_1 = 0
+    if (np.abs(final_fraction % 1) < NumericConstants.MIN_VALUE):
+        fraction_2 = 1
+
+    numerator = (value_1 * weight_1 * fraction_1 +
+                 value_2 * weight_2 * fraction_2)
     denominator = (weight_1 * fraction_1 + fraction_2 * weight_2)
-    
+
     for weight in medium_weights:
         denominator = denominator + weight
-        
-    for (value,weight) in zip(medium_values,medium_weights):
+
+    for (value, weight) in zip(medium_values, medium_weights):
         numerator = numerator + value * weight
 
     if np.abs(denominator) < NumericConstants.MIN_VALUE:
         return 0
     return numerator / denominator
 
+
+def get_summation(initial_fraction: float, final_fraction, values_1d: np.ndarray):
+
+    if (np.abs(initial_fraction % 1) < NumericConstants.MIN_VALUE and initial_fraction > 0):
+        initial_fraction_block = int(initial_fraction-1)
+    else:
+        initial_fraction_block = int(initial_fraction)
+
+    if (np.abs(final_fraction % 1) < NumericConstants.MIN_VALUE and final_fraction > 0):
+        final_fraction_block = int(final_fraction - 1)
+    else:
+        final_fraction_block = int(final_fraction)
+
+    # Case of the same block
+    if (np.abs(np.floor(initial_fraction) - np.floor(final_fraction)) < NumericConstants.MIN_VALUE):
+        return values_1d[initial_fraction_block] * (final_fraction - initial_fraction)
+
+    # External values
+    value_1 = values_1d[initial_fraction_block]
+    fraction_1 = 1 - (initial_fraction % 1)
+
+    value_2 = values_1d[final_fraction_block]
+    fraction_2 = final_fraction % 1
+
+    # Case of adjacent blocks
+    if (np.abs(np.floor(final_fraction) - np.floor(initial_fraction) - 1) < NumericConstants.MIN_VALUE):
+        summation = value_1 * fraction_1 + value_2 * fraction_2
+        return summation
+
+
+    # Compute middle values
+    if (np.abs(initial_fraction % 1) < NumericConstants.MIN_VALUE):
+        fraction_1 = 0
+    if (np.abs(final_fraction % 1) < NumericConstants.MIN_VALUE):
+        fraction_2 = 1
+    
+    available_values : list[float] = []
+    for index in np.arange(initial_fraction_block + 1,final_fraction_block):
+        available_values.append(values_1d[index])
+    
+    summation = value_1 * fraction_1 + value_2 * fraction_2
+    for value in available_values:
+        summation = summation + value
+    return summation
