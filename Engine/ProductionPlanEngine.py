@@ -1,4 +1,3 @@
-from tomlkit import key
 from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
 from Engine.ColumnMaximumExtractionEngine import ColumnMaximumExtractionEngine, MaximumExtractionInformation
 from Engine.ExtractionPeriodBasicScheduleResult import ExtractionPeriodBasicScheduleResult

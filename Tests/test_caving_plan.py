@@ -1,7 +1,5 @@
 import unittest
-from matplotlib import pyplot as plt
 import numpy as np
-from sympy import prod
 from Engine.CavingProductionPlanExtractionSpeedItem import CavingProductionPlanExtractionSpeedItem
 from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
 import os
