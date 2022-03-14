@@ -115,8 +115,9 @@ class ProductionPlanEngine:
 
             # Upgrade variables
             current_days = current_days + days_of_extraction
-
-        return ProductionPlanResult(results)
+        # TODO: Poner en target los items a integrar
+        production_plan_result = ProductionPlanResult(units=results,block_model=self.blockmodel,target=self.target)
+        return production_plan_result
 
     def _maximum_extraction(self, period: int, columns: list[ProductionPlanColumn], subscripts_maximum_extraction_result: dict[FootprintSubscript, MaximumExtractionInformation]) -> list[ExtractionPeriodBasicScheduleResult]:
         extraction_results:  list[ExtractionPeriodBasicScheduleResult] = []

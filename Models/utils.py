@@ -185,7 +185,7 @@ def change_block_dimension(block_model: BlockModel, dim_x: float, dim_y: float, 
     return cloned_block_model
 
 
-def get_average(initial_fraction: float, final_fraction, values_1d: np.ndarray, weights_1d: np.ndarray) -> float:
+def get_average(initial_fraction: float, final_fraction: float, values_1d: np.ndarray, weights_1d: np.ndarray) -> float:
 
     # Case same block
     if (np.abs(initial_fraction - final_fraction) < NumericConstants.MIN_VALUE):
@@ -268,17 +268,16 @@ def get_summation(initial_fraction: float, final_fraction, values_1d: np.ndarray
         summation = value_1 * fraction_1 + value_2 * fraction_2
         return summation
 
-
     # Compute middle values
     if (np.abs(initial_fraction % 1) < NumericConstants.MIN_VALUE):
         fraction_1 = 0
     if (np.abs(final_fraction % 1) < NumericConstants.MIN_VALUE):
         fraction_2 = 1
-    
-    available_values : list[float] = []
-    for index in np.arange(initial_fraction_block + 1,final_fraction_block):
+
+    available_values: list[float] = []
+    for index in np.arange(initial_fraction_block + 1, final_fraction_block):
         available_values.append(values_1d[index])
-    
+
     summation = value_1 * fraction_1 + value_2 * fraction_2
     for value in available_values:
         summation = summation + value

@@ -143,8 +143,7 @@ class CavingPlanShould(unittest.TestCase):
             block_model, footprint, sequence, target)
         production_plan_result = production_plan_engine.process()
 
-        production_plan_result.dump_units(
-            'C:/Users/franc/Desktop/Result Production.csv')
+        production_plan_result.dump_units('C:/Users/franc/Desktop/Output/Result Production.csv')
 
     def test_column_average_fixture(self):
         column_values = np.array([1, 2, 3, 4, 5])
