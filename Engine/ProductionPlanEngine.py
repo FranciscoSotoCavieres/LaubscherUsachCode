@@ -77,7 +77,7 @@ class ProductionPlanEngine:
             # Get the active and not depleted column
             columns_available = np.array(list(filter(
                 lambda x: x.is_activated == True and x.is_depleted == False, columns_available)))
-            
+
             # Check if exists available columns
             if len(columns_available) == 0:
                 continue
@@ -115,8 +115,11 @@ class ProductionPlanEngine:
 
             # Upgrade variables
             current_days = current_days + days_of_extraction
-        # TODO: Poner en target los items a integrar
-        production_plan_result = ProductionPlanResult(units=results,block_model=self.blockmodel,target=self.target)
+
+        average_sets = self.target.average_data_sets
+        summation_sets = self.target.summation_data_sets
+        production_plan_result = ProductionPlanResult(
+            units=results, block_model=self.blockmodel, target=self.target, average_sets=average_sets, summation_sets=summation_sets)
         return production_plan_result
 
     def _maximum_extraction(self, period: int, columns: list[ProductionPlanColumn], subscripts_maximum_extraction_result: dict[FootprintSubscript, MaximumExtractionInformation]) -> list[ExtractionPeriodBasicScheduleResult]:

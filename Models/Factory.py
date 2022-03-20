@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from Engine.CavingProductionPlanExtractionSpeedItem import CavingProductionPlanExtractionSpeedItem
-from Engine.CavingProductionPlanTarget import CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL, CAVING_PLAN_CONFIGURATION_INCORPORATION_COLUMN, CAVING_PLAN_CONFIGURATION_MAXIMUM_PERCENTAGE_COLUMN, CAVING_PLAN_CONFIGURATION_METADATA_SHEET, CAVING_PLAN_CONFIGURATION_MINIMUM_PERCENTAGE_COLUMN, CAVING_PLAN_CONFIGURATION_NAME_CELL, CAVING_PLAN_CONFIGURATION_NUMBER_OF_SPEEDS_CELL, CAVING_PLAN_CONFIGURATION_PERIOD_CELL, CAVING_PLAN_CONFIGURATION_PERIOD_COLUMN, CAVING_PLAN_CONFIGURATION_SPEED_COLUMN, CAVING_PLAN_CONFIGURATION_SPEED_SHEET, CAVING_PLAN_CONFIGURATION_TARGET_COLUMN, CAVING_PLAN_CONFIGURATION_TARGET_SHEET, CavingProductionPlanTarget
+from Engine.CavingProductionPlanTarget import CAVING_PLAN_CONFIGURATION_AVERAGE_DATA_SET_CELL, CAVING_PLAN_CONFIGURATION_DATA_SET_AVERAGE_COLUMN, CAVING_PLAN_CONFIGURATION_DATA_SET_SHEET, CAVING_PLAN_CONFIGURATION_DATA_SET_SUMMATION_COLUMN, CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL, CAVING_PLAN_CONFIGURATION_INCORPORATION_COLUMN, CAVING_PLAN_CONFIGURATION_MAXIMUM_PERCENTAGE_COLUMN, CAVING_PLAN_CONFIGURATION_METADATA_SHEET, CAVING_PLAN_CONFIGURATION_MINIMUM_PERCENTAGE_COLUMN, CAVING_PLAN_CONFIGURATION_NAME_CELL, CAVING_PLAN_CONFIGURATION_NUMBER_OF_SPEEDS_CELL, CAVING_PLAN_CONFIGURATION_PERIOD_CELL, CAVING_PLAN_CONFIGURATION_PERIOD_COLUMN, CAVING_PLAN_CONFIGURATION_SPEED_COLUMN, CAVING_PLAN_CONFIGURATION_SPEED_SHEET, CAVING_PLAN_CONFIGURATION_SUMMATION_DATA_SET_CELL, CAVING_PLAN_CONFIGURATION_TARGET_COLUMN, CAVING_PLAN_CONFIGURATION_TARGET_SHEET, CavingProductionPlanTarget
 from Engine.CavingProductionPlanTargetItem import CavingProductionPlanTargetItem
 from Models.BlockModel import BlockModel, structure_keyword
 from Models.BlockModelStructure import BlockModelStructure
@@ -132,6 +132,14 @@ def caving_configuration_from_excel(filepath: str) -> CavingProductionPlanTarget
 
     density_data_set_name = str(worksheet.cell(
         CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL[0], CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL[1]).value)
+
+    number_of_average_items = int(worksheet.cell(
+        CAVING_PLAN_CONFIGURATION_AVERAGE_DATA_SET_CELL[0], CAVING_PLAN_CONFIGURATION_AVERAGE_DATA_SET_CELL[1]).value)
+
+    number_of_summation_items = int(worksheet.cell(
+        CAVING_PLAN_CONFIGURATION_SUMMATION_DATA_SET_CELL[0], CAVING_PLAN_CONFIGURATION_SUMMATION_DATA_SET_CELL[1]).value)
+
+
     # Target
     target_items: list[CavingProductionPlanTargetItem] = []
 
@@ -173,6 +181,25 @@ def caving_configuration_from_excel(filepath: str) -> CavingProductionPlanTarget
         speed_items.append(CavingProductionPlanExtractionSpeedItem(
             minimum_percentage, maximum_percentage, speed))
 
+    # Average and summation sets
+    worksheet = workbook[CAVING_PLAN_CONFIGURATION_DATA_SET_SHEET]
+    
+    average_sets :list[str] = []
+
+    for i in np.arange(number_of_average_items):
+        cell = worksheet.cell(
+            i+2, CAVING_PLAN_CONFIGURATION_DATA_SET_AVERAGE_COLUMN)        
+        average_sets.append(str(cell.value))
+    
+    summation_sets :list[str] = []
+
+    for i in np.arange(number_of_summation_items):
+        cell = worksheet.cell(
+            i+2, CAVING_PLAN_CONFIGURATION_DATA_SET_SUMMATION_COLUMN)        
+        summation_sets.append(str(cell.value))  
+   
+
+    # Production plan
     caving_production_plan_target = CavingProductionPlanTarget(
-        name, density_data_set_name, target_items, speed_items)
+        name, density_data_set_name, target_items, speed_items,average_sets,summation_sets)
     return caving_production_plan_target

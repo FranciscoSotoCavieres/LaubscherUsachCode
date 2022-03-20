@@ -10,14 +10,16 @@ from Engine.ProductionPlanColumn import ProductionPlanColumn
 from Models.Footprint import Footprint
 from Models.Sequence import Sequence
 from Models.utils import FootprintSubscript, get_average, get_summation
-import pytest
 from Engine.ProductionPlanEngine import ProductionPlanEngine
+import pytest
 
 
 class CavingPlanShould(unittest.TestCase):
     def test_caving_target(self):
         plan_name = 'Panel A'
         density_data_set_name = "Density"
+        average_sets : list[str]= ["Cut","Mo"]
+        summation_sets : list[str]= ["Dure"]
 
         # Target
         first_item_target = CavingProductionPlanTargetItem(1, 1e6, 10, 360)
@@ -35,7 +37,7 @@ class CavingPlanShould(unittest.TestCase):
             first_item_speed, second_item_speed]
 
         caving_production_plan_target = CavingProductionPlanTarget(
-            plan_name, density_data_set_name, target_items, speed_items)
+            plan_name, density_data_set_name, target_items, speed_items,average_sets,summation_sets)
 
         filepath = f'{os.getcwd()}/test_data/plan_configuration.xlsx'
         caving_production_plan_target.export_to_excel(filepath)
@@ -49,6 +51,8 @@ class CavingPlanShould(unittest.TestCase):
             1].target_tonnage == caving_production_plan_target_imported.target_items[1].target_tonnage
         assert caving_production_plan_target_imported.speed_items[1].maximum_percentage == 70
         assert caving_production_plan_target.denisty_data_set_name == density_data_set_name
+        assert caving_production_plan_target.average_data_sets[0] == "Cut"
+        assert caving_production_plan_target.summation_data_sets[0] == "Dure"
 
     def test_column_unit(self):
         block_model: BlockModel = ft.block_model_from_npy_file(
@@ -143,7 +147,9 @@ class CavingPlanShould(unittest.TestCase):
             block_model, footprint, sequence, target)
         production_plan_result = production_plan_engine.process()
 
-        production_plan_result.dump_units('C:/Users/franc/Desktop/Output/Result Production.csv')
+        # Dump the units
+        production_plan_result.dump_units(f'{os.getcwd()}/test_result/dump_units.csv')
+
 
     def test_column_average_fixture(self):
         column_values = np.array([1, 2, 3, 4, 5])

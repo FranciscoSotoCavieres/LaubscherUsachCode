@@ -1,13 +1,21 @@
 import numpy as np
+from Models.excel_utils import remove_default_worksheet
 import Models.utils as utils
 from Models import utils
 from Engine.ExtractionPeriodBasicScheduleResult import ExtractionPeriodBasicScheduleResult
 from Models.BlockModel import BlockModel
 from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
+from openpyxl import Workbook
+from openpyxl.worksheet.worksheet import Worksheet
 
+
+PRODUCTION_PLAN_KEYWORD = 'Production plan'
 
 class ProductionPlanResultPeriod:
     tonnage: float
+    active_area_squared_meters : float
+    incorporated_area_squared_meters :float
+    depleted_area_squared_meters :float
     average: dict[str, float]
     summation: dict[str, float]
 
@@ -51,10 +59,11 @@ class ProductionPlanResultPeriod:
                         unit.from_meters / block_height, unit.to_meters / block_height, column_density, column_density)
 
                     count = count + 1
-
-                average_value = np.average(
-                    average_values, weights=density_values)
-                self.average[average_set] = average_value
+                if (density_values.sum() != 0):
+                    average_value = np.average(average_values, weights=density_values)
+                    self.average[average_set] = average_value
+                else:
+                    self.average[average_set] = 0
 
         if (summation_sets != None):
             for summation_set in summation_sets:
@@ -130,6 +139,21 @@ class ProductionPlanResult:
 
         with open(filepath, 'w+') as write_file:
             write_file.writelines(lines)
+    
+    def export_excel(filepath:str):
+        """Export excel
+        Args:
+            filepath (str): xlsx filepath
+        """
+        workbook = Workbook()
+        
+        worksheet : Worksheet= workbook.create_sheet(PRODUCTION_PLAN_KEYWORD)
+
+        worksheet.cell()
+
+        remove_default_worksheet(workbook)
+        workbook.save(filepath)
+        
 
     def _get_items():
         pass
