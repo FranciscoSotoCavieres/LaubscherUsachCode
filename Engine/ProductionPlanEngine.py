@@ -39,7 +39,7 @@ class ProductionPlanEngine:
         density = blockmodel.get_data_set(self.target. denisty_data_set_name)
         for i in np.arange(self.structure.shape[0]):
             for j in np.arange(self.structure.shape[1]):
-                if (footprint.footprint_indices[i, j] <= 0):
+                if footprint.footprint_indices[i, j] <= 0:
                     continue
                 column: ProductionPlanColumn = ProductionPlanColumn(
                     footprint, FootprintSubscript(i, j), sequence, density)
@@ -75,7 +75,7 @@ class ProductionPlanEngine:
             subscripts_maximum_extraction_result: dict[FootprintSubscript,
                                                        MaximumExtractionInformation] = dict()
             # Get the active and not depleted column
-            columns_available = np.array(list(filter(
+            columns_available : np.ndarray = np.array(list(filter(
                 lambda x: x.is_activated == True and x.is_depleted == False, columns_available)))
 
             # Check if exists available columns
@@ -122,10 +122,10 @@ class ProductionPlanEngine:
             units=results, block_model=self.blockmodel, target=self.target, average_sets=average_sets, summation_sets=summation_sets)
         return production_plan_result
 
-    def _maximum_extraction(self, period: int, columns: list[ProductionPlanColumn], subscripts_maximum_extraction_result: dict[FootprintSubscript, MaximumExtractionInformation]) -> list[ExtractionPeriodBasicScheduleResult]:
+    def _maximum_extraction(self, period: int, columns: np.ndarray, subscripts_maximum_extraction_result: dict[FootprintSubscript, MaximumExtractionInformation]) -> list[ExtractionPeriodBasicScheduleResult]:
         extraction_results:  list[ExtractionPeriodBasicScheduleResult] = []
         for index in np.arange(len(columns)):
-            column = columns[index]
+            column : ProductionPlanColumn= columns[index]
             maximum_extraction = subscripts_maximum_extraction_result[
                 column.subscript].maximum_tonnage
             result = column.extract(
@@ -171,7 +171,7 @@ class ProductionPlanEngine:
             last_index = index + 1
 
         # Case of not more tonnage
-        if (current_tonnage_to_extract <= 0):
+        if current_tonnage_to_extract <= 0:
             return extraction_results
 
         # -- Normal extraction --

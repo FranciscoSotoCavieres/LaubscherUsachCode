@@ -8,14 +8,14 @@ from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-
 PRODUCTION_PLAN_KEYWORD = 'Production plan'
+
 
 class ProductionPlanResultPeriod:
     tonnage: float
-    active_area_squared_meters : float
-    incorporated_area_squared_meters :float
-    depleted_area_squared_meters :float
+    active_area_squared_meters: float
+    incorporated_area_squared_meters: float
+    depleted_area_squared_meters: float
     average: dict[str, float]
     summation: dict[str, float]
 
@@ -26,7 +26,7 @@ class ProductionPlanResultPeriod:
         self.summation = dict()
         self.tonnage = 0
 
-        valid_units:  list[ExtractionPeriodBasicScheduleResult] = []
+        valid_units: list[ExtractionPeriodBasicScheduleResult] = []
 
         for unit in units:
             if (unit.period_id == period_id):
@@ -60,7 +60,8 @@ class ProductionPlanResultPeriod:
 
                     count = count + 1
                 if (density_values.sum() != 0):
-                    average_value = np.average(average_values, weights=density_values)
+                    average_value = np.average(
+                        average_values, weights=density_values)
                     self.average[average_set] = average_value
                 else:
                     self.average[average_set] = 0
@@ -87,21 +88,55 @@ class ProductionPlanResultPeriod:
                 average_value: float = np.sum(summation_values)
                 self.summation[summation_set] = average_value
 
+        # Areas
+        area_per_unit_square_meters = block_model.structure.get_block_area()
+
+        # Compute the active area
+        self.active_area_squared_meters = 0
+        for unit in valid_units:
+            if unit.extracted_tonnage > 0:
+                self.active_area_squared_meters = self.active_area_squared_meters + \
+                    area_per_unit_square_meters
+
+        # Compute the incorporated area
+        self.incorporated_area_squared_meters = 0
+        for unit in valid_units:
+            (i, j) = unit.footprint_subscripts.i, unit.footprint_subscripts.j
+            subscript_units = (x for x in units if (
+                x.footprint_subscripts.i == i and x.footprint_subscripts.j == j))
+            # Check if the minimum
+            period_ids = [subscript_unit for subscript_unit in subscript_units]
+            min_period = min(period_ids)
+            if (min_period == period_id):
+                self.incorporated_area_squared_meters = self.incorporated_area_squared_meters + \
+                    area_per_unit_square_meters
+
+        # Compute the depleted area
+        last_month_active_area_squared_meters = 0.0
+        for unit in units:
+            if (unit.period_id - 1 != period_id):
+                continue
+            if unit.extracted_tonnage > 0:
+                last_month_active_area_squared_meters = last_month_active_area_squared_meters + \
+                    area_per_unit_square_meters
+        self.depleted_area_squared_meters = last_month_active_area_squared_meters - \
+            (self.active_area_squared_meters -
+             self.incorporated_area_squared_meters)
+
 
 class ProductionPlanResult:
-
     block_model: BlockModel
     units: list[ExtractionPeriodBasicScheduleResult]
-    target : CavingProductionPlanTarget
+    target: CavingProductionPlanTarget
 
-    period_result : dict[int,ProductionPlanResultPeriod]    
+    period_result: dict[int, ProductionPlanResultPeriod]
 
     average_sets: list[str]
-    summation_sets : list[str]
+    summation_sets: list[str]
 
-    def __init__(self, units: list[ExtractionPeriodBasicScheduleResult],target:CavingProductionPlanTarget , block_model: BlockModel,
+    def __init__(self, units: list[ExtractionPeriodBasicScheduleResult], target: CavingProductionPlanTarget,
+                 block_model: BlockModel,
                  average_sets: list[str] = None, summation_sets: list[str] = None):
-        # TODO: Agregar al config.
         self.units = units
         self.block_mode = block_model
         self.average_sets = average_sets
@@ -113,10 +148,12 @@ class ProductionPlanResult:
         density_data_set_name = self.target.denisty_data_set_name
         for target_item in self.target.target_items:
             period_id = target_item.period_number
-            self.period_result[target_item.period_number] = ProductionPlanResultPeriod(units=self.units,period_id=period_id,
-            density_set=density_data_set_name,average_sets=self.average_sets,summation_sets=summation_sets,block_model=block_model)
-
-        
+            self.period_result[target_item.period_number] = ProductionPlanResultPeriod(units=self.units,
+                                                                                       period_id=period_id,
+                                                                                       density_set=density_data_set_name,
+                                                                                       average_sets=self.average_sets,
+                                                                                       summation_sets=summation_sets,
+                                                                                       block_model=block_model)
 
     def dump_units(self, filepath: str):
         """Dump all units
@@ -139,21 +176,20 @@ class ProductionPlanResult:
 
         with open(filepath, 'w+') as write_file:
             write_file.writelines(lines)
-    
-    def export_excel(filepath:str):
+
+    def export_excel(filepath: str):
         """Export excel
         Args:
             filepath (str): xlsx filepath
         """
         workbook = Workbook()
-        
-        worksheet : Worksheet= workbook.create_sheet(PRODUCTION_PLAN_KEYWORD)
+
+        worksheet: Worksheet = workbook.create_sheet(PRODUCTION_PLAN_KEYWORD)
 
         worksheet.cell()
 
         remove_default_worksheet(workbook)
         workbook.save(filepath)
-        
 
-    def _get_items():
+    def _get_items(self):
         pass

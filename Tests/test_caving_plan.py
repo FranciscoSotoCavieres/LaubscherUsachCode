@@ -14,6 +14,31 @@ from Engine.ProductionPlanEngine import ProductionPlanEngine
 import pytest
 
 
+def test_column_summation_fixture():
+    column_values = np.array([1, 2, 3, 4, 5])
+
+    value = get_summation(values_1d=column_values,
+                          initial_fraction=0.2, final_fraction=1.2)
+
+    test_value = 1 * 0.8 + 2 * 0.2
+    assert np.abs(value - test_value) < 0.001
+
+    value = get_summation(values_1d=column_values,
+                          initial_fraction=1.2, final_fraction=3.6)
+    test_value = 2 * 0.8 + 3 + 4 * 0.6
+    assert np.abs(value - test_value) < 0.001
+
+    value = get_summation(values_1d=column_values,
+                          initial_fraction=1, final_fraction=3)
+    test_value = 2+3
+    assert np.abs(value - test_value) < 0.001
+
+    value = get_summation(values_1d=column_values,
+                          initial_fraction=1, final_fraction=3.1)
+    test_value = 2+3 + 4*0.1
+    assert np.abs(value - test_value) < 0.001
+
+
 class CavingPlanShould(unittest.TestCase):
     def test_caving_target(self):
         plan_name = 'Panel A'
@@ -167,28 +192,4 @@ class CavingPlanShould(unittest.TestCase):
                             initial_fraction=1.2, final_fraction=3.6)
         test_value = (2 * 0.6 * 0.8 + 3 * 0.7 * 1 + 4 *
                       0.8 * 0.6)/(0.6 * 0.8 + 0.7 * 1 + 0.8 * 0.6)
-        assert np.abs(value - test_value) < 0.001
-
-    def test_column_summation_fixture(self):
-        column_values = np.array([1, 2, 3, 4, 5])
-
-        value = get_summation(values_1d=column_values,
-                              initial_fraction=0.2, final_fraction=1.2)
-
-        test_value = 1 * 0.8 + 2 * 0.2
-        assert np.abs(value - test_value) < 0.001
-
-        value = get_summation(values_1d=column_values,
-                              initial_fraction=1.2, final_fraction=3.6)
-        test_value = 2 * 0.8 + 3 + 4 * 0.6
-        assert np.abs(value - test_value) < 0.001
-
-        value = get_summation(values_1d=column_values,
-                              initial_fraction=1, final_fraction=3)
-        test_value = 2+3
-        assert np.abs(value - test_value) < 0.001
-
-        value = get_summation(values_1d=column_values,
-                              initial_fraction=1, final_fraction=3.1)
-        test_value = 2+3 + 4*0.1
         assert np.abs(value - test_value) < 0.001
