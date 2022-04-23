@@ -1,42 +1,31 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-import numbers
-
-import numpy as np
-
-from Models.BlockModelStructure import decimate_meshes, decimate_polygons
-from Models.BlockModelStructure import read_polygons
-from Models.BlockModelStructure import histogram
-import Models.BlockModelStructure as bm
+from Models.BlockModelDilution import BlockModelDilution
 import Models.Factory as ft
-from Models.utils import reduce_csv_file_variables
+import Models.visualization as vs
+from Scripts.ValorizationScript import valorization
 
 if __name__ == '__main__':
-    pass
-    filepath = r'C:\Users\franc\bmining\Antonio Rabajille - Carpeta_compartida\Ejercicio Pampa Escondida SLC 2022-01-01\PampaASC.csv'
-    out_filepath_csv = r'C:\Users\franc\bmining\Antonio Rabajille - Carpeta_compartida\Ejercicio Pampa Escondida SLC 2022-01-01\PampaASC_reduced.csv'
-    out_filepath_python = r'C:\Users\franc\bmining\Antonio Rabajille - Carpeta_compartida\Ejercicio Pampa Escondida SLC 2022-01-01\PampaPython.npy'
-    # Units
-    x_label = 'xcentre'
-    y_label = 'ycentre'
-    z_label = 'zcentre'
-    cut_label = 'cut'
-    density_label = 'densidad'
-    mo_label = 'mo'
-    codmat = 'codmat'
-    categ_rec = 'categ_rec'
-    litologia = 'litologia'
-    minzone = 'minzone'
-    # TODO: Filtrar información
+    # Importar modelo de bloques
+    path = r"C:\Users\franc\OneDrive - bmining\Repositorio USACH\Modelos de Bloques\Modelos Csv\G12.csv"
+    block_model = ft.block_model_from_csv_file(path, "X", "Y", "Z")
+    output_block_model_path = r"C:\Users\franc\OneDrive - bmining\Repositorio USACH\Modelos de Bloques\Modelos Csv\G12.npy"
+    block_model.save(output_block_model_path)
+    block_model = ft.block_model_from_npy_file(output_block_model_path)
 
-    labels = [x_label, y_label, z_label, cut_label, density_label, mo_label, codmat, categ_rec, litologia, minzone]
+    level_block_model = ft.block_model_from_level(block_model,7)
+    hola = 1
+    # output_block_model_path = r"C:\Users\franc\OneDrive - bmining\Repositorio USACH\Modelos de Bloques\Modelos Csv\G12.npy"
+    # block_model.save(output_block_model_path)
+    # block_model = ft.block_model_from_npy_file(output_block_model_path)
 
-    reduce_csv_file_variables(filepath, out_filepath_csv, labels)
-    # block_model = ft.block_model_from_csv_file(filepath, x_label, y_label, z_label, ',', labels)
-    # block_model.save(out_filepath_python)
-    # print(block_model.structure.shape)
+    # block_model_from_level = block_model.clone()
+    # block_dilution = BlockModelDilution(40, block_model.structure)
+    # block_dilution.compute_dilution_coefficients()
 
-    # decimate_polygons()
-    # list_of_list_vec3 = statistics_of_lines(r'C:\Users\franc\bmining\Gabriela Alarcón - BHP\Visualización 3D\topographyLines.csv')
+    # block_model_diluted = block_model.clone()
+    # for data_set_name in block_model.get_dataset_names():
+       # data_set = block_model.get_data_set(data_set_name)
+       # diluted_data_set = block_dilution.dilute_dataset(data_set)
+       # block_model_diluted.update_dataset(data_set_name, diluted_data_set)
+
+    # valorization(block_model_diluted)
+    

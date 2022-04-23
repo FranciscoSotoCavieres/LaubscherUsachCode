@@ -129,7 +129,7 @@ class ProductionPlanResult:
     units: list[ExtractionPeriodBasicScheduleResult]
     target: CavingProductionPlanTarget
 
-    period_result: dict[int, ProductionPlanResultPeriod]
+    period_results: dict[int, ProductionPlanResultPeriod]
 
     average_sets: list[str]
     summation_sets: list[str]
@@ -144,16 +144,16 @@ class ProductionPlanResult:
         self.target = target
 
         # Assign items per period
-        self.period_result = dict()
+        self.period_results = dict()
         density_data_set_name = self.target.denisty_data_set_name
         for target_item in self.target.target_items:
             period_id = target_item.period_number
-            self.period_result[target_item.period_number] = ProductionPlanResultPeriod(units=self.units,
-                                                                                       period_id=period_id,
-                                                                                       density_set=density_data_set_name,
-                                                                                       average_sets=self.average_sets,
-                                                                                       summation_sets=summation_sets,
-                                                                                       block_model=block_model)
+            self.period_results[target_item.period_number] = ProductionPlanResultPeriod(units=self.units,
+                                                                                        period_id=period_id,
+                                                                                        density_set=density_data_set_name,
+                                                                                        average_sets=self.average_sets,
+                                                                                        summation_sets=summation_sets,
+                                                                                        block_model=block_model)
 
     def dump_units(self, filepath: str):
         """Dump all units
@@ -177,7 +177,7 @@ class ProductionPlanResult:
         with open(filepath, 'w+') as write_file:
             write_file.writelines(lines)
 
-    def export_excel(filepath: str):
+    def export_excel(self, filepath: str):
         """Export excel
         Args:
             filepath (str): xlsx filepath
@@ -185,6 +185,59 @@ class ProductionPlanResult:
         workbook = Workbook()
 
         worksheet: Worksheet = workbook.create_sheet(PRODUCTION_PLAN_KEYWORD)
+
+        cell = worksheet.cell(1, 1)
+
+        tonnage_column: int = 1
+        active_area_column: int = 2
+        incorporated_area_column: int = 3
+        depleted_area_column: int = 4
+        data_sets_begin_column: int = 5
+
+        current_row = 1
+        worksheet.cell(current_row, tonnage_column).value = 'Tonnage'
+        worksheet.cell(
+            current_row, active_area_column).value = 'Active area m²'
+        worksheet.cell(
+            current_row, incorporated_area_column).value = 'Incorporated area m²'
+        worksheet.cell(
+            current_row, depleted_area_column).value = 'Depleted area m²'
+        current_column = data_sets_begin_column
+        for average_set in self.average_sets:
+            worksheet.cell(current_row, current_column).value = average_set
+            current_column = current_column + 1
+        for summation_set in self.summation_sets:
+            worksheet.cell(current_row, current_column).value = summation_set
+            current_column = current_column + 1
+
+        current_row = current_row + 1
+        for period in self.period_results.keys():
+            period_result = self.period_results[period]
+
+            worksheet.cell(
+                current_row, tonnage_column).value = period_result.tonnage
+            worksheet.cell(
+                current_row, active_area_column).value = period_result.active_area_squared_meters
+            worksheet.cell(
+                current_row, incorporated_area_column).value = period_result.incorporated_area_squared_meters
+            worksheet.cell(
+                current_row, depleted_area_column).value = period_result.depleted_area_squared_meters
+
+            current_column = data_sets_begin_column
+            for average_set in self.average_sets:
+                worksheet.cell(
+                    current_row, current_column).value = period_result.average[average_set]
+                current_column = current_column + 1
+
+            for summation_set in self.summation_sets:
+                worksheet.cell(
+                    current_row, current_column).value = period_result.summation[summation_set]
+                current_column = current_column + 1
+
+            current_row = current_row + 1
+
+        # for period
+        # cell.value =  self.period_result[]
 
         worksheet.cell()
 

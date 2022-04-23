@@ -7,6 +7,9 @@ def valorization(block_model: BlockModel):
     # Parameters
     value_set = 'value'
     value_accumulated_set = 'accumulated_value'
+
+    cut_key = "Cut"
+    density_key = "Density"
     copper_price = 3.2 * 2204.5  # USD/t
     refining_cost = .15 * 2204.5  # USD/t
     mining_cost = 8  # USD/t
@@ -20,8 +23,8 @@ def valorization(block_model: BlockModel):
     shape = structure.shape
 
     # Get the datasets
-    cut = block_model.get_data_set('Cut')
-    density = block_model.get_data_set('Density')
+    cut = block_model.get_data_set(cut_key)
+    density = block_model.get_data_set(density_key)
 
     # Compute tonnage
     tonnage = density * block_volume

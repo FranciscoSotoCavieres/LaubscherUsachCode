@@ -6,7 +6,7 @@ from Engine.CavingProductionPlanTargetItem import CavingProductionPlanTargetItem
 from Models.BlockModel import BlockModel, structure_keyword
 from Models.BlockModelStructure import BlockModelStructure
 from Models.Footprint import Footprint, index_keyword
-from openpyxl import workbook, worksheet, load_workbook
+from openpyxl import load_workbook
 from Models.Sequence import SEQUENCE_KEYWORD, Sequence
 from Models.excel_utils import load_matrix
 from Engine.CavingProductionPlanTarget import CAVING_PLAN_CONFIGURATION_DURATION_COLUMN
@@ -82,7 +82,7 @@ def block_model_from_npy_file(filepath: str) -> BlockModel:
 
     block_model = BlockModel(structure)
 
-    for data_set_key in data_set_dict.keys():
+    for data_set_key in data_set_keys:
         block_model.add_dataset(data_set_key, data_set_dict[data_set_key])
 
     return block_model

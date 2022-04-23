@@ -174,6 +174,7 @@ class CavingPlanShould(unittest.TestCase):
 
         # Dump the units
         production_plan_result.dump_units(f'{os.getcwd()}/test_result/dump_units.csv')
+        production_plan_result.export_excel(f'{os.getcwd()}/test_result/dump_units.csv')
 
 
     def test_column_average_fixture(self):
