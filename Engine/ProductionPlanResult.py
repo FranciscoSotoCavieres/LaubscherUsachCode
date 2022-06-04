@@ -12,6 +12,7 @@ PRODUCTION_PLAN_KEYWORD = 'Production plan'
 
 
 class ProductionPlanResultPeriod:
+    period_id: int
     tonnage: float
     active_area_squared_meters: float
     incorporated_area_squared_meters: float
@@ -25,12 +26,13 @@ class ProductionPlanResultPeriod:
         self.average = dict()
         self.summation = dict()
         self.tonnage = 0
+        self.period_id = period_id
 
         valid_units: list[ExtractionPeriodBasicScheduleResult] = []
 
         for unit in units:
             if (unit.period_id == period_id):
-                self.tonnage = self.tonnage = unit.extracted_tonnage
+                self.tonnage = self.tonnage + unit.extracted_tonnage
                 valid_units.append(unit)
 
         density_data = block_model.get_data_set(density_set)
@@ -105,7 +107,8 @@ class ProductionPlanResultPeriod:
             subscript_units = (x for x in units if (
                 x.footprint_subscripts.i == i and x.footprint_subscripts.j == j))
             # Check if the minimum
-            period_ids = [subscript_unit for subscript_unit in subscript_units]
+            period_ids = [
+                subscript_unit.period_id for subscript_unit in subscript_units]
             min_period = min(period_ids)
             if (min_period == period_id):
                 self.incorporated_area_squared_meters = self.incorporated_area_squared_meters + \
@@ -114,14 +117,13 @@ class ProductionPlanResultPeriod:
         # Compute the depleted area
         last_month_active_area_squared_meters = 0.0
         for unit in units:
-            if (unit.period_id - 1 != period_id):
+            if (unit.period_id != period_id - 1):
                 continue
             if unit.extracted_tonnage > 0:
                 last_month_active_area_squared_meters = last_month_active_area_squared_meters + \
                     area_per_unit_square_meters
-        self.depleted_area_squared_meters = last_month_active_area_squared_meters - \
-            (self.active_area_squared_meters -
-             self.incorporated_area_squared_meters)
+        self.depleted_area_squared_meters = -(
+            self.active_area_squared_meters - self.incorporated_area_squared_meters) + last_month_active_area_squared_meters
 
 
 class ProductionPlanResult:
@@ -164,7 +166,7 @@ class ProductionPlanResult:
 
         lines: list[str] = []
 
-        header = "Period,Subscript I, Subscript J,Extracted Tonnage, From Meters,To Meters,Is Depleted,Tonnage Availble, Target Tonnage, Accomplished\n"
+        header = "Period,Subscript I, Subscript J,Extracted Tonnage, From Meters,To Meters,Is Depleted,Tonnage Available, Target Tonnage, Accomplished\n"
         lines.append(header)
         for unit in self.units:
             line = f"{unit.period_id},{unit.footprint_subscripts.i},{unit.footprint_subscripts.j},"
@@ -188,13 +190,15 @@ class ProductionPlanResult:
 
         cell = worksheet.cell(1, 1)
 
-        tonnage_column: int = 1
-        active_area_column: int = 2
-        incorporated_area_column: int = 3
-        depleted_area_column: int = 4
-        data_sets_begin_column: int = 5
+        period_column: int = 1
+        tonnage_column: int = 2
+        active_area_column: int = 3
+        incorporated_area_column: int = 4
+        depleted_area_column: int = 5
+        data_sets_begin_column: int = 6
 
         current_row = 1
+        worksheet.cell(current_row, period_column).value = 'Period'
         worksheet.cell(current_row, tonnage_column).value = 'Tonnage'
         worksheet.cell(
             current_row, active_area_column).value = 'Active area m²'
@@ -214,6 +218,8 @@ class ProductionPlanResult:
         for period in self.period_results.keys():
             period_result = self.period_results[period]
 
+            worksheet.cell(
+                current_row, period_column).value = period_result.period_id
             worksheet.cell(
                 current_row, tonnage_column).value = period_result.tonnage
             worksheet.cell(
@@ -235,14 +241,5 @@ class ProductionPlanResult:
                 current_column = current_column + 1
 
             current_row = current_row + 1
-
-        # for period
-        # cell.value =  self.period_result[]
-
-        worksheet.cell()
-
         remove_default_worksheet(workbook)
         workbook.save(filepath)
-
-    def _get_items(self):
-        pass

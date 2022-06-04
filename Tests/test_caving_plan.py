@@ -150,13 +150,11 @@ class CavingPlanShould(unittest.TestCase):
 
         target.target_items = []
         target.target_items.append(
-            CavingProductionPlanTargetItem(0, 1e6, 1, 360))
+            CavingProductionPlanTargetItem(0, 1e6, 2, 360))
         target.target_items.append(
-            CavingProductionPlanTargetItem(1, 1e6, 0, 360))
+            CavingProductionPlanTargetItem(1, 1e6, 1, 360))
         target.target_items.append(
             CavingProductionPlanTargetItem(2, 1e6, 0, 360))
-        target.target_items.append(
-            CavingProductionPlanTargetItem(3, 1e6, 0, 360))
         target.target_items.append(
             CavingProductionPlanTargetItem(3, 1e6, 0, 360))
         target.target_items.append(
@@ -174,7 +172,7 @@ class CavingPlanShould(unittest.TestCase):
 
         # Dump the units
         production_plan_result.dump_units(f'{os.getcwd()}/test_result/dump_units.csv')
-        production_plan_result.export_excel(f'{os.getcwd()}/test_result/dump_units.csv')
+        production_plan_result.export_excel(f'{os.getcwd()}/test_result/dump_units.xlsx')
 
 
     def test_column_average_fixture(self):

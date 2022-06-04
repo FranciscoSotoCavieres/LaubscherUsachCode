@@ -15,6 +15,8 @@ def valorization(block_model: BlockModel):
     mining_cost = 8  # USD/t
     processing_cost = 8  # USD/t
     development_cost = 3000  # USD/m²
+    investment_cost = 2  # USD/t
+    general_cost = 1  # USD/t
 
     # Structure
     structure = block_model.structure
@@ -29,7 +31,8 @@ def valorization(block_model: BlockModel):
     # Compute tonnage
     tonnage = density * block_volume
 
-    value_array = ((copper_price - refining_cost) * cut / 100 - (mining_cost + processing_cost)) * tonnage
+    value_array = ((copper_price - refining_cost) * cut / 100 -
+                   (mining_cost + processing_cost+investment_cost+general_cost)) * tonnage
 
     for i in np.arange(shape[0]):
         for j in np.arange(shape[1]):
@@ -44,6 +47,7 @@ def valorization(block_model: BlockModel):
     accumulated_value_array = accumulate_values(value_array)
 
     if block_model.exits_data_set(value_accumulated_set):
-        block_model.update_dataset(value_accumulated_set, accumulated_value_array)
+        block_model.update_dataset(
+            value_accumulated_set, accumulated_value_array)
     else:
         block_model.add_dataset(value_accumulated_set, accumulated_value_array)

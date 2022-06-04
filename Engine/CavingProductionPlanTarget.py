@@ -98,7 +98,7 @@ class CavingProductionPlanTarget:
 
         cell = worksheet.cell(
             CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL[0], CAVING_PLAN_CONFIGURATION_DENSITY_DATA_SET_CELL[1])
-        cell.value = len(self.denisty_data_set_name)
+        cell.value = self.denisty_data_set_name
 
         # Average Data Sets
         cell = worksheet.cell(

@@ -52,9 +52,9 @@ class ProductionPlanEngine:
         target_items = self.target.target_items
 
         # Gets available columns and sort by sequence index
-        columns_available = self.columns[np.where(self.columns != None)]
-        columns_available = sorted(
-            columns_available, key=lambda x: x.sequence_index)
+        columns_pool = self.columns[np.where(self.columns != None)]
+        columns_pool = sorted(
+            columns_pool, key=lambda x: x.sequence_index)
 
         current_days = 0
         for target_item in target_items:
@@ -62,7 +62,7 @@ class ProductionPlanEngine:
 
             # Active new columns
             to_incorporate = target_item.incorporation_blocks
-            for column in columns_available:
+            for column in columns_pool:
                 if (to_incorporate == 0):
                     break
                 if (column.is_activated):
@@ -75,8 +75,8 @@ class ProductionPlanEngine:
             subscripts_maximum_extraction_result: dict[FootprintSubscript,
                                                        MaximumExtractionInformation] = dict()
             # Get the active and not depleted column
-            columns_available : np.ndarray = np.array(list(filter(
-                lambda x: x.is_activated == True and x.is_depleted == False, columns_available)))
+            columns_available: np.ndarray = np.array(list(filter(
+                lambda x: x.is_activated == True and x.is_depleted == False, columns_pool)))
 
             # Check if exists available columns
             if len(columns_available) == 0:
@@ -91,7 +91,7 @@ class ProductionPlanEngine:
                 maximum_extraction_engine: ColumnMaximumExtractionEngine = self.maximum_extraction_columns[
                     subscripts.i, subscripts.j]
                 maximum_extraction_result = maximum_extraction_engine.get_maximum_extraction(
-                    days_of_extraction, current_days)
+                    days_of_extraction)
                 subscripts_maximum_extraction_result[subscripts] = maximum_extraction_result
 
             # -- Extraction process --
@@ -125,7 +125,7 @@ class ProductionPlanEngine:
     def _maximum_extraction(self, period: int, columns: np.ndarray, subscripts_maximum_extraction_result: dict[FootprintSubscript, MaximumExtractionInformation]) -> list[ExtractionPeriodBasicScheduleResult]:
         extraction_results:  list[ExtractionPeriodBasicScheduleResult] = []
         for index in np.arange(len(columns)):
-            column : ProductionPlanColumn= columns[index]
+            column: ProductionPlanColumn = columns[index]
             maximum_extraction = subscripts_maximum_extraction_result[
                 column.subscript].maximum_tonnage
             result = column.extract(

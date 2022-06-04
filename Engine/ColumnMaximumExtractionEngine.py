@@ -24,11 +24,13 @@ class ColumnMaximumExtractionEngine:
     _days: list[float]
     _maximum_extraction_tonnage: list[float]
     _last_day: float
+    _current_day : float
 
     def __init__(self, column: ProductionPlanColumn, target: CavingProductionPlanTarget):
         self._days = []
         self._maximum_extraction_tonnage = []
         self._last_day = []
+        self._current_day = 0
 
         column_tonnage = column.total_tonnage
         column_area = column.area
@@ -53,26 +55,26 @@ class ColumnMaximumExtractionEngine:
 
         self._last_day = self._days[len(self._days) - 1]
 
-    def get_maximum_extraction(self, days_of_extraction: float, initial_day: float) -> MaximumExtractionInformation:
+    def get_maximum_extraction(self, days_of_extraction: float) -> MaximumExtractionInformation:
         """Maximum tonnage available
 
         Args:
             days_of_extraction (float): days in which the column will extract
-            initial_day (float): current day
-
         Returns:
             MaximumExtractionInformation: _description_
         """
-        if (initial_day + days_of_extraction > self._last_day):
+        if (self._current_day + days_of_extraction > self._last_day):
             out_of_range = True
             if_extracted_depleted = True
-            days_of_extraction = self._last_day - initial_day
+            days_of_extraction = self._last_day - self._current_day
             maximum_tonnage = self.get_tonnage(
-                self._last_day) - self.get_tonnage(initial_day)
+                self._last_day) - self.get_tonnage(self._current_day)
+            self._current_day  = self._last_day
             return MaximumExtractionInformation(days_of_extraction, out_of_range, if_extracted_depleted, maximum_tonnage)
         else:
-            actual_tonnage = self.get_tonnage(initial_day)
-            final_tonnage = self.get_tonnage(initial_day + days_of_extraction)
+            actual_tonnage = self.get_tonnage(self._current_day)
+            self._current_day = self._current_day + days_of_extraction
+            final_tonnage = self.get_tonnage(self._current_day)
             maximum_tonnage = final_tonnage - actual_tonnage
 
             return MaximumExtractionInformation(days_of_extraction=days_of_extraction, if_extracted_is_depleted=False,
