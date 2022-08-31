@@ -13,6 +13,47 @@ __vertices_per_cube = 8
 __scalars_per_cube = 12
 __scale_factor = .8
 
+def blockmodel_view (block_model: BlockModel, data_set: str, Discrete: bool= None ):
+    '''
+    shows the block model in some particular dataset
+    
+            Parameters:
+                block_model (BlockModel): object with block model information
+                data_set (str): Database parameter to display. Example: 'Cut'
+                Discrete (bool, optional):  Default is False. If data_set is discrete variable put True
+    '''
+
+    Data=block_model.dataset[data_set]
+    Origin=block_model.structure.offset
+    blockSize=block_model.structure.block_size
+    Dimension=block_model.structure.shape +1
+    
+    p=pv.Plotter()
+    grid= pv.UniformGrid()
+
+    grid.dimensions=Dimension
+    grid.spacing=block_model.structure.block_size
+    grid.origin= block_model.structure.offset
+    grid.cell_arrays[data_set]=Data.flatten(order='F')
+
+    threshed= grid.threshold([-999999,99999])
+
+    if (Discrete== None) or (Discrete== False):
+        cmap = plt.cm.get_cmap("jet")
+        p.add_mesh(threshed ,cmap=cmap,show_edges=True)#,rng=[0,1])
+
+    else:
+        colors=['blue','orange','green','red','purple','brown','pink','gray','olive','cyan', 'yelow']
+        i=0
+        for valor in np.unique(Data):
+            threshed=grid.threshold([valor,valor])
+            p.add_mesh(threshed ,color=colors[i],show_edges=True,label=str(valor))
+            i+=1
+        p.add_legend(name=data_set)
+
+    p.show_grid()
+    p.show_axes_all()
+    p.show()
 
 def grid(block_model: BlockModel, data_set: str):
     values = block_model.get_data_set(data_set)
