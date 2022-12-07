@@ -48,7 +48,7 @@ def best_height_of_draw(block_model: BlockModel, data_set_name: str, min_blocks:
 def get_column_average(column_values: np.ndarray, columns_weights: np.ndarray = None, min_block_index=None,
                        max_block_index=None):
     min_index = 0
-    max_index = column_values.shape[2]
+    max_index = column_values.shape[0]
 
     if min_index is not None:
         min_index = min_block_index
@@ -58,11 +58,11 @@ def get_column_average(column_values: np.ndarray, columns_weights: np.ndarray = 
 
     new_column_values: np.ndarray = column_values[min_index:max_index]
 
-    if column_values is None:
+    if columns_weights is None:
         average = np.average(new_column_values)
     else:
         new_column_weights = columns_weights[min_index:max_index]
-        average = np.average(new_column_values, new_column_weights)
+        average = np.average(new_column_values, weights=new_column_weights)
 
     return average
 

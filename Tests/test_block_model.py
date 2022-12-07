@@ -42,7 +42,7 @@ class BlockModelShould(unittest.TestCase):
             order="F")  # Flatten the array!
 
         # Now plot the grid!
-        # grid.plot(show_edges=True)        
+        grid.plot(show_edges=True)        
         
     def test_block_model_dilution(self):
         # load data
@@ -129,6 +129,7 @@ class BlockModelShould(unittest.TestCase):
 
         draw_footprint(read_footprint, block_model,
                        current_sequence.sequence_indices)
+        
 
     # UTILS
     def get_block_model_from_csv(self):
@@ -172,14 +173,14 @@ class BlockModelShould(unittest.TestCase):
                 value_array[i, j, 0] -= development_cost * block_area
 
         # Check if exists the data set
-        if block_model.exits_data_set(value_set):
+        if block_model.exists_data_set(value_set):
             block_model.update_dataset(value_set, value_array)
         else:
             block_model.add_dataset(value_set, value_array)
 
         accumulated_value_array = accumulate_values(value_array)
 
-        if block_model.exits_data_set(value_accumulated_set):
+        if block_model.exists_data_set(value_accumulated_set):
             block_model.update_dataset(
                 value_accumulated_set, accumulated_value_array)
         else:

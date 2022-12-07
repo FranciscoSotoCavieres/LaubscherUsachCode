@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import ndarray
 
+
 class BlockModelStructure:
     block_size: ndarray
     offset: ndarray
@@ -20,9 +21,7 @@ class BlockModelStructure:
     def check_dimensions(self, data: np.ndarray):
         if len(data.shape) != 3:
             return False
-        if data.shape[0] == self.block_size[0] \
-                & data.shape[1] == self.block_size[1] \
-                & data.shape[2] == self.block_size[2]:
+        if data.shape[0] == self.shape[0] and data.shape[1] == self.shape[1] and data.shape[2] == self.shape[2]:
             return True
         return False
 
@@ -43,7 +42,7 @@ class BlockModelStructure:
         x = - self.block_size[0] / 2 + self.offset[0]
         y = - self.block_size[1] / 2 + self.offset[1]
         z = - self.block_size[2] / 2 + self.offset[2]
-        return np.array([x,y,z])
+        return np.array([x, y, z])
 
     def get_subscript(self, value: float, subscript_type='i') -> int:
         index = 0
@@ -77,6 +76,24 @@ class BlockModelStructure:
                 array[indices[i, 0], indices[i, 1], indices[i, 2]] = data_1d[i]
             output[dataset_name] = array
         return output
+
+    def clam_subscripts(self, i: int, j: int, k: int):
+        if (i >= self.shape[0]):
+            i = self.shape[0] - 1
+        elif (i < 0):
+            i = 0
+
+        if (j >= self.shape[1]):
+            j = self.shape[1] - 1
+        elif (j < 0):
+            j = 0
+
+        if (k >= self.shape[2]):
+            k = self.shape[2] - 1
+        elif (k < 0):
+            k = 0
+
+        return (i, j, k)
 
     @staticmethod
     def from_xyz(x: np.ndarray, y: np.ndarray, z: np.ndarray):

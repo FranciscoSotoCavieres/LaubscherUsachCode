@@ -1,5 +1,6 @@
 import numpy as np
 from Models.BlockModelStructure import BlockModelStructure
+from Models.BlockModel import BlockModel
 from Models.utils import polygon_area
 
 
@@ -27,7 +28,8 @@ class BlockModelDilution:
         pde = self._pde_ratio
 
         # Create empty array for coefficients
-        self.dilution_coefficients = np.zeros([int(z_blocks / (pde / 3.0)), z_blocks])
+        self.dilution_coefficients = np.zeros(
+            [int(z_blocks / (pde / 3.0)), z_blocks])
 
         # Lines generation
         max_j: int = 0
@@ -45,7 +47,8 @@ class BlockModelDilution:
             x2 = x_length
             y2 = x_length * slope + y0
 
-            initial_block, final_block = np.ceil(y0 / z_length), np.ceil(y2 / z_length)
+            initial_block, final_block = np.ceil(
+                y0 / z_length), np.ceil(y2 / z_length)
             initial_x, initial_y = x0, y0
             count = 1
             for j in range(int(initial_block), int(final_block)):
@@ -63,7 +66,8 @@ class BlockModelDilution:
                                           j * z_length,
                                           (j - 1) * z_length,
                                           (j - 1) * z_length])
-                    self.dilution_coefficients[j - 1, i - 1] = polygon_area(polygon_x, polygon_y)
+                    self.dilution_coefficients[j - 1, i -
+                                               1] = polygon_area(polygon_x, polygon_y)
                 else:  # Polygon of 4 sides
                     polygon_x = np.array([initial_x,
                                           final_x,
@@ -73,14 +77,16 @@ class BlockModelDilution:
                                           final_y,
                                           j * z_length,
                                           (j - 1) * z_length])
-                    self.dilution_coefficients[j - 1, i - 1] = polygon_area(polygon_x, polygon_y)
+                    self.dilution_coefficients[j - 1, i -
+                                               1] = polygon_area(polygon_x, polygon_y)
                 count += 1
                 initial_x = final_x
                 initial_y = final_y
             # Polygon of 3 sides
             polygon_x = np.array([initial_x, x2, x_length])
             polygon_y = np.array([initial_y, y2, initial_y])
-            self.dilution_coefficients[int(final_block) - 1, i - 1] = polygon_area(polygon_x, polygon_y)
+            self.dilution_coefficients[int(
+                final_block) - 1, i - 1] = polygon_area(polygon_x, polygon_y)
 
             if max_j < int(final_block) - 1:
                 max_j = int(final_block)
@@ -119,7 +125,8 @@ class BlockModelDilution:
             self.dilution_coefficients[i, start_independent_area + 1] = x_length * z_length - np.sum(
                 self.dilution_coefficients[i, :])
 
-        self.dilution_coefficients = self.dilution_coefficients / (x_length * z_length)
+        self.dilution_coefficients = self.dilution_coefficients / \
+            (x_length * z_length)
 
     def dilute_dataset(self, model: np.ndarray, topographyFraction: np.ndarray = None,
                        thinner: float = 0.0) -> np.ndarray:
@@ -130,13 +137,32 @@ class BlockModelDilution:
 
         diluted_model = np.zeros(model.shape)  # Create an empty array
         if topographyFraction is None:
-            topographyFraction = np.ones([model.shape[0], model.shape[1]]) * model.shape[2] - 1  # Max topography
+            topographyFraction = np.ones(
+                [model.shape[0], model.shape[1]]) * model.shape[2] - 1  # Max topography
             topographyFraction = topographyFraction.astype('int')
         for i in range(model.shape[0]):
             for j in range(model.shape[1]):
                 column = np.dot(
-                    self.dilution_coefficients[:topographyFraction[i, j] + 1, :topographyFraction[i, j] + 1],
+                    self.dilution_coefficients[:topographyFraction[i,
+                                                                   j] + 1, :topographyFraction[i, j] + 1],
                     model[i, j, :topographyFraction[i, j] + 1])  # Dilute the column
-                column += self.dilution_coefficients[:topographyFraction[i, j] + 1, -1] * thinner  # Set the thinner
+                # Set the thinner
+                column += self.dilution_coefficients[:
+                                                     topographyFraction[i, j] + 1, -1] * thinner
                 diluted_model[i, j, :topographyFraction[i, j] + 1] = column
         return diluted_model  # Returns diluted model
+
+    def dilute_block_model(self, block_model: BlockModel, dataset_thinners: dict[str, float], topographyFraction: np.ndarray = None):
+        structure = BlockModelStructure(
+            block_model.structure.block_size, block_model.structure.shape, block_model.structure.offset)
+        if (self.dilution_coefficients is None):
+            raise ValueError(self.dilution_coefficients)
+        diluted_block_model = BlockModel(structure)
+
+        for key in dataset_thinners:
+            thinner = dataset_thinners[key]
+            original_data_set = block_model.get_data_set(key)
+            diluted_data_set = self.dilute_dataset(
+                original_data_set, topographyFraction, thinner)
+            diluted_block_model.add_dataset(key, diluted_data_set)
+        return diluted_block_model

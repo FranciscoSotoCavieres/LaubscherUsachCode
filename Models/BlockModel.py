@@ -14,7 +14,7 @@ class BlockModel:
 
     def add_dataset(self, name: str, data: np.ndarray):
         # Check for dimensions
-        if self.structure.check_dimensions(data):
+        if not self.structure.check_dimensions(data):
             raise Exception('Dimension error')
         # Check for name existence
         if name in self.get_dataset_names():
@@ -39,7 +39,7 @@ class BlockModel:
     def delete_data_set(self, dataset: str):
         self.dataset.pop(dataset)
 
-    def exits_data_set(self, name: str):
+    def exists_data_set(self, name: str):
         if name in self.get_dataset_names():
             return True
         return False

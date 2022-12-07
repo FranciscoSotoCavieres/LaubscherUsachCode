@@ -7,17 +7,26 @@ from Engine.CavingProductionPlanExtractionSpeedItem import CavingProductionPlanE
 from Engine.CavingProductionPlanTargetItem import CavingProductionPlanTargetItem
 from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
 from Engine.ProductionPlanEngine import ProductionPlanEngine
+from Scripts.BestHeighPerColumn import compute_best_height_level,compute_tonnage_and_grade
 
 if __name__ == '__main__':
     # Importar modelo de bloques
-    path = r"C:\Users\franc\OneDrive - bmining\Repositorio USACH\Modelos de Bloques\Modelos Csv\G12.csv"
-    block_model = ft.block_model_from_csv_file(path, "X", "Y", "Z")
 
+    sector = 'E'
+    path_npy = rf"C:\Users\franc\bmining\BM22-AMS43-IUG CACHORRO - Documentos\03 Equipo de Trabajo\05 Francisco Soto\Caving Analylisis 29-11-2022\cax_2022_rblk_555_COMPILADO_112022_BB_{sector}.npy"
+
+    dilution_folder = rf"C:\Users\franc\bmining\BM22-AMS43-IUG CACHORRO - Documentos\03 Equipo de Trabajo\05 Francisco Soto\Caving Analylisis 29-11-2022\Diluted Block Model {sector}"
+    main_folder=   rf"C:\Users\franc\bmining\BM22-AMS43-IUG CACHORRO - Documentos\03 Equipo de Trabajo\05 Francisco Soto\Caving Analylisis 29-11-2022"
+    # compute_best_height_level(main_folder)
+    compute_best_height_level(main_folder)
+    exit()
+    block_model = ft.block_model_from_csv_file(path, "X", "Y", "Z")
     data_sets = block_model.get_dataset_names()
+
+    vs.blockmodel_view(block_model, "Cut")
 
     hola = 1
 
-    
     # output_block_model_path = r"C:\Users\franc\OneDrive - bmining\Repositorio USACH\Modelos de Bloques\Modelos Csv\G12.npy"
     # block_model.save(output_block_model_path)
     # block_model = ft.block_model_from_npy_file(output_block_model_path)

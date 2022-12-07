@@ -39,14 +39,14 @@ def valorization(block_model: BlockModel):
             value_array[i, j, 0] -= development_cost * block_area
 
     # Check if exists the data set
-    if block_model.exits_data_set(value_set):
+    if block_model.exists_data_set(value_set):
         block_model.update_dataset(value_set, value_array)
     else:
         block_model.add_dataset(value_set, value_array)
 
     accumulated_value_array = accumulate_values(value_array)
 
-    if block_model.exits_data_set(value_accumulated_set):
+    if block_model.exists_data_set(value_accumulated_set):
         block_model.update_dataset(
             value_accumulated_set, accumulated_value_array)
     else:

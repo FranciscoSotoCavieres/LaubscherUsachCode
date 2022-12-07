@@ -67,6 +67,53 @@ def block_model_from_level(block_model: BlockModel, level: int) -> BlockModel:
     return new_block_model
 
 
+def slice_block_model(block_model: BlockModel, from_x: int = None, to_x=None,
+                      from_y: int = None, to_y=None, from_z: int = None, to_z=None) -> BlockModel:
+    oldStructure: BlockModelStructure = block_model.structure
+    block_size = oldStructure.block_size.copy()
+    shape = oldStructure.shape.copy()
+    offset = oldStructure.offset.copy()
+
+    if (from_x is None):
+        from_x = 0
+
+    if (from_y is None):
+        from_y = 0
+
+    if (from_z is None):
+        from_z = 0
+
+    #
+    if (to_x is None):
+        to_x = shape[0] - 1
+
+    if (to_y is None):
+        to_y = shape[1] - 1
+
+    if (to_z is None):
+        to_z = shape[2] - 1
+
+    shape[0] = to_x - from_x + 1
+    offset[0] = offset[0] + from_x * block_size[0]
+
+    shape[1] = to_y - from_y + 1
+    offset[1] = offset[1] + from_y * block_size[1]
+
+    shape[2] = to_z - from_z + 1
+    offset[2] = offset[2] + from_z * block_size[2]
+
+    newStructure = BlockModelStructure(block_size, shape, offset)
+
+    new_block_model = BlockModel(newStructure)
+    for dataset_name in block_model.get_dataset_names():
+        new_block_model.add_dataset(
+            dataset_name, block_model.get_data_set(dataset_name)[from_x:to_x+1,
+                                                                 from_y:to_y+1,
+                                                                 from_z:to_z+1])
+
+    return new_block_model
+
+
 def block_model_from_npy_file(filepath: str) -> BlockModel:
     # noinspection PyTypeChecker
     data_set_dict: dict[str, np.ndarray] = np.load(
@@ -75,7 +122,7 @@ def block_model_from_npy_file(filepath: str) -> BlockModel:
     data_set_keys.remove(structure_keyword)
 
     structure_array = data_set_dict[structure_keyword]
-    shape = structure_array[0, :][:]
+    shape = np.array(structure_array[0, :][:], dtype=np.int32)
     offset = structure_array[1, :][:]
     block_size = structure_array[2, :][:]
     structure = BlockModelStructure(block_size, shape, offset)
@@ -139,7 +186,6 @@ def caving_configuration_from_excel(filepath: str) -> CavingProductionPlanTarget
     number_of_summation_items = int(worksheet.cell(
         CAVING_PLAN_CONFIGURATION_SUMMATION_DATA_SET_CELL[0], CAVING_PLAN_CONFIGURATION_SUMMATION_DATA_SET_CELL[1]).value)
 
-
     # Target
     target_items: list[CavingProductionPlanTargetItem] = []
 
@@ -183,23 +229,22 @@ def caving_configuration_from_excel(filepath: str) -> CavingProductionPlanTarget
 
     # Average and summation sets
     worksheet = workbook[CAVING_PLAN_CONFIGURATION_DATA_SET_SHEET]
-    
-    average_sets :list[str] = []
+
+    average_sets: list[str] = []
 
     for i in np.arange(number_of_average_items):
         cell = worksheet.cell(
-            i+2, CAVING_PLAN_CONFIGURATION_DATA_SET_AVERAGE_COLUMN)        
+            i+2, CAVING_PLAN_CONFIGURATION_DATA_SET_AVERAGE_COLUMN)
         average_sets.append(str(cell.value))
-    
-    summation_sets :list[str] = []
+
+    summation_sets: list[str] = []
 
     for i in np.arange(number_of_summation_items):
         cell = worksheet.cell(
-            i+2, CAVING_PLAN_CONFIGURATION_DATA_SET_SUMMATION_COLUMN)        
-        summation_sets.append(str(cell.value))  
-   
+            i+2, CAVING_PLAN_CONFIGURATION_DATA_SET_SUMMATION_COLUMN)
+        summation_sets.append(str(cell.value))
 
     # Production plan
     caving_production_plan_target = CavingProductionPlanTarget(
-        name, density_data_set_name, target_items, speed_items,average_sets,summation_sets)
+        name, density_data_set_name, target_items, speed_items, average_sets, summation_sets)
     return caving_production_plan_target
