@@ -7,6 +7,7 @@ from Models.BlockModel import BlockModel
 from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
+from itertools import groupby
 
 PRODUCTION_PLAN_KEYWORD = 'Production plan'
 
@@ -95,8 +96,9 @@ class ProductionPlanResultPeriod:
 
         # Compute the active area
         self.active_area_squared_meters = 0
+
         for unit in valid_units:
-            if unit.extracted_tonnage > 0:
+            if not unit.is_depleted:
                 self.active_area_squared_meters = self.active_area_squared_meters + \
                     area_per_unit_square_meters
 
@@ -140,7 +142,7 @@ class ProductionPlanResult:
                  block_model: BlockModel,
                  average_sets: list[str] = None, summation_sets: list[str] = None):
         self.units = units
-        self.block_mode = block_model
+        self.block_model = block_model
         self.average_sets = average_sets
         self.summation_sets = summation_sets
         self.target = target

@@ -55,13 +55,13 @@ class Footprint:
         for i in range(self.footprint_height.shape[0]):
             for j in range(self.footprint_height.shape[1]):
 
-                (im1, _, _) = self.structure.clam_subscripts(i-1, 0, 0)
-                (i0, _, _) = self.structure.clam_subscripts(i, 0, 0)
-                (ip1, _, _) = self.structure.clam_subscripts(i+1, 0, 0)
+                (im1, _, _) = self.structure.clamp_subscripts(i-1, 0, 0)
+                (i0, _, _) = self.structure.clamp_subscripts(i, 0, 0)
+                (ip1, _, _) = self.structure.clamp_subscripts(i+1, 0, 0)
 
-                (_, jm1, _) = self.structure.clam_subscripts(0, j-1, 0)
-                (_, j0, _) = self.structure.clam_subscripts(0, j, 0)
-                (_, jp1, _) = self.structure.clam_subscripts(0, j+1, 0)
+                (_, jm1, _) = self.structure.clamp_subscripts(0, j-1, 0)
+                (_, j0, _) = self.structure.clamp_subscripts(0, j, 0)
+                (_, jp1, _) = self.structure.clamp_subscripts(0, j+1, 0)
 
                 zIm1Jp1 = self.footprint_height[im1, jp1]
                 zI0Jp1 = self.footprint_height[i0, jp1]

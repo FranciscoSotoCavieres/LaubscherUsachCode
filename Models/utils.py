@@ -6,7 +6,9 @@ from Models.BlockModel import BlockModel
 from Models.BlockModelStructure import BlockModelStructure
 from Models.Footprint import Footprint
 from Models.Sequence import Sequence
-from typing import Tuple, final
+from typing import Tuple
+import ezdxf
+import ezdxf.entities
 
 
 class FootprintSubscript:
@@ -282,3 +284,26 @@ def get_summation(initial_fraction: float, final_fraction, values_1d: np.ndarray
     for value in available_values:
         summation = summation + value
     return summation
+
+
+def create_dxf_mesh_document(vertices: np.ndarray, faces: np.ndarray):
+    doc = ezdxf.new()
+    model_space = doc.modelspace()
+    mesh = model_space.add_mesh()
+    mesh.dxf.subdivision_levels = 0
+    with mesh.edit_data() as mesh_data:
+        mesh_data.vertices = vertices
+        mesh_data.faces = faces
+    return doc
+
+
+def get_dxf_mesh(vertices: np.ndarray, faces: np.ndarray):
+    mesh = ezdxf.entities.mesh.Mesh()
+    mesh.dxf.subdivision_levels = 0
+
+    new_faces = np.array(faces, dtype='int32')
+    new_faces = new_faces.reshape((int(new_faces.shape[0]/3), 3))
+    with mesh.edit_data() as mesh_data:
+        mesh_data.vertices = vertices
+        mesh_data.faces = new_faces
+    return mesh

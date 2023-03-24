@@ -1,7 +1,6 @@
 from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
-from Engine.ColumnMaximumExtractionEngine import ColumnMaximumExtractionEngine, MaximumExtractionInformation
 from Engine.ExtractionPeriodBasicScheduleResult import ExtractionPeriodBasicScheduleResult
-from Engine.ProductionPlanColumn import ProductionPlanColumn
+from Engine.ProductionPlanColumn import MaximumExtractionInformation, ProductionPlanColumn
 from Engine.ProductionPlanResult import ProductionPlanResult
 from Models.BlockModel import BlockModel
 from Models.BlockModelStructure import BlockModelStructure
@@ -18,7 +17,6 @@ class ProductionPlanEngine:
     target: CavingProductionPlanTarget
     structure: BlockModelStructure
     columns: np.ndarray
-    maximum_extraction_columns: np.ndarray
 
     acceleration_ratio = 0.9
     """ Ratio of a column when is required
@@ -33,8 +31,6 @@ class ProductionPlanEngine:
 
         self.columns = np.empty(
             [self.structure.shape[0], self.structure.shape[1]], dtype=ProductionPlanColumn)
-        self.maximum_extraction_columns = np.empty(
-            [self.structure.shape[0], self.structure.shape[1]], dtype=ColumnMaximumExtractionEngine)
 
         density = blockmodel.get_data_set(self.target. denisty_data_set_name)
         for i in np.arange(self.structure.shape[0]):
@@ -42,10 +38,8 @@ class ProductionPlanEngine:
                 if footprint.footprint_indices[i, j] <= 0:
                     continue
                 column: ProductionPlanColumn = ProductionPlanColumn(
-                    footprint, FootprintSubscript(i, j), sequence, density)
+                    footprint, FootprintSubscript(i, j), sequence, density, target)
                 self.columns[i, j] = column
-                self.maximum_extraction_columns[i, j] = ColumnMaximumExtractionEngine(
-                    column, target)
 
     def process(self) -> ProductionPlanResult:
         results: list[ExtractionPeriodBasicScheduleResult] = []
@@ -87,17 +81,22 @@ class ProductionPlanEngine:
 
             for index in np.arange(len(columns_available)):
                 column: ProductionPlanColumn = columns_available[index]
+
                 subscripts = column.subscript
-                maximum_extraction_engine: ColumnMaximumExtractionEngine = self.maximum_extraction_columns[
-                    subscripts.i, subscripts.j]
-                maximum_extraction_result = maximum_extraction_engine.get_maximum_extraction(
+
+                maximum_extraction_result = column.simulate_maximum_extraction(
                     days_of_extraction)
+
                 subscripts_maximum_extraction_result[subscripts] = maximum_extraction_result
 
             # -- Extraction process --
             maximum_tonnage = sum(
                 [x.maximum_tonnage for x in subscripts_maximum_extraction_result.values()])
-            ratio = target_tonnage/maximum_tonnage
+
+            if (maximum_tonnage == 0):
+                ratio = 0
+            else:
+                ratio = target_tonnage/maximum_tonnage
             if (ratio <= 1):
                 period_results = self._extract_period(period=period_id,
                                                       available_columns=columns_available,
@@ -124,6 +123,7 @@ class ProductionPlanEngine:
 
     def _maximum_extraction(self, period: int, columns: np.ndarray, subscripts_maximum_extraction_result: dict[FootprintSubscript, MaximumExtractionInformation]) -> list[ExtractionPeriodBasicScheduleResult]:
         extraction_results:  list[ExtractionPeriodBasicScheduleResult] = []
+
         for index in np.arange(len(columns)):
             column: ProductionPlanColumn = columns[index]
             maximum_extraction = subscripts_maximum_extraction_result[
@@ -159,6 +159,7 @@ class ProductionPlanEngine:
                 extraction_result = column.extract(period_id=period,
                                                    target_tonnage=maximum_tonnage)
                 extraction_results.append(extraction_result)
+
                 current_tonnage_to_extract = current_tonnage_to_extract - \
                     extraction_result.extracted_tonnage
             else:

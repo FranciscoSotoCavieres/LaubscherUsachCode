@@ -1,3 +1,4 @@
+from Engine.ExtractionPeriodBasicScheduleResult import ExtractionPeriodBasicScheduleResult
 from Models.BlockModelStructure import BlockModelStructure
 from Models.Footprint import Footprint
 from Models.BlockModel import BlockModel
@@ -8,7 +9,7 @@ from pyvista import PolyData, plot, themes
 from typing import Tuple
 import matplotlib as plt
 import vedo
-
+import Models.utils
 __faces_per_cube = 12
 __vertices_per_cube = 8
 __scalars_per_cube = 12
@@ -163,7 +164,7 @@ def draw_footprint(footprint: Footprint, blockmodel: BlockModel, values_2d: np.n
 
 def draw_columns_from_arrays(x_values: np.ndarray, y_values: np.ndarray, floors: np.ndarray,
                              heights: np.ndarray, x_size: float, y_size: float,
-                             benefit: np.ndarray, slopes_percentage: np.ndarray):
+                             benefit: np.ndarray, slopes_percentage: np.ndarray, average_aus: np.ndarray):
     number_of_items = len(x_values)  # Numbers
     vertices = np.zeros([number_of_items * __vertices_per_cube, 3])
     faces = np.zeros([number_of_items * __faces_per_cube, 3]).astype('int')
@@ -172,12 +173,14 @@ def draw_columns_from_arrays(x_values: np.ndarray, y_values: np.ndarray, floors:
     floor_scalars = np.zeros([number_of_items * __scalars_per_cube])
     slope_percentage_scalars = np.zeros([number_of_items * __scalars_per_cube])
     slope_angle_scalars = np.zeros([number_of_items * __scalars_per_cube])
+    average_au_scalars = np.zeros([number_of_items * __scalars_per_cube])
 
     benefit_name = 'Beneficio MUSD'
     height_name = 'Altura columna m'
     level_name = 'Cota m'
     slope_percentage_name = 'Pendiente %'
     slope_angle_name = 'Pendiente º'
+    average_au_name = 'Au g/t'
 
     selected_scalar = slope_angle_name
 
@@ -187,10 +190,11 @@ def draw_columns_from_arrays(x_values: np.ndarray, y_values: np.ndarray, floors:
         value = benefit[current_index]
         x = x_values[current_index]
         y = y_values[current_index]
+        average_au = average_aus[current_index]
         slope_percentage = slopes_percentage[current_index]
 
-        (current_vertices, current_faces) = __get_cube(x,
-                                                       y, floor, height, x_size, y_size, current_index)
+        (current_vertices, current_faces) = __get_cube_draw(x,
+                                                            y, floor, height, x_size, y_size, current_index)
 
         vertices[current_index * __vertices_per_cube:(
             current_index+1) * __vertices_per_cube, :] = current_vertices
@@ -208,6 +212,8 @@ def draw_columns_from_arrays(x_values: np.ndarray, y_values: np.ndarray, floors:
 
         slope_angle_scalars[current_index *
                             __scalars_per_cube:(current_index+1) * __scalars_per_cube] = np.arctan(slope_percentage/100)*180/np.pi
+        average_au_scalars[current_index *
+                           __scalars_per_cube:(current_index+1) * __scalars_per_cube] = average_au
 
     footprint_mesh = pv.make_tri_mesh(vertices, faces)
     footprint_mesh[benefit_name] = benefit_scalars/1e6
@@ -215,6 +221,7 @@ def draw_columns_from_arrays(x_values: np.ndarray, y_values: np.ndarray, floors:
     footprint_mesh[level_name] = floor_scalars
     footprint_mesh[slope_percentage_name] = slope_percentage_scalars
     footprint_mesh[slope_angle_name] = slope_angle_scalars
+    footprint_mesh[average_au_name] = average_au_scalars
 
     footprint_mesh.set_active_scalars(selected_scalar)
 
@@ -232,7 +239,7 @@ def draw_columns_from_arrays(x_values: np.ndarray, y_values: np.ndarray, floors:
 
     pv.set_plot_theme(my_theme)
     plotter = pv.Plotter()
-
+    cmap = plt.cm.get_cmap('jet', 10)
     clim = [0, 0]
     if (footprint_mesh.active_scalars_name == benefit_name):
         clim = [5e-2, 1]
@@ -244,10 +251,11 @@ def draw_columns_from_arrays(x_values: np.ndarray, y_values: np.ndarray, floors:
         clim = [0, 50]
     elif (footprint_mesh.active_scalars_name == slope_angle_name):
         clim = [0, 50]
+    elif (footprint_mesh.active_scalars_name == average_au_name):
+        clim = [0, 17]
     else:
         raise NameError("Out of available names")
 
-    cmap = ['#0000A6', '#00A800', '#FF2121']
     plotter.add_mesh(footprint_mesh, smooth_shading=True,
                      split_sharp_edges=True, cmap=cmap, clim=clim, below_color='gray', above_color='#A600A6')
 
@@ -261,6 +269,73 @@ def draw_columns_from_arrays(x_values: np.ndarray, y_values: np.ndarray, floors:
     plotter.show()
 
     return plotter
+
+
+def get_mesh_from_schedule_units(units: list[ExtractionPeriodBasicScheduleResult], structure: BlockModelStructure, level: float):
+
+    block_size_x = structure.block_size[0]
+    block_size_y = structure.block_size[1]
+
+    vertices = np.zeros([len(units) * __vertices_per_cube, 3])
+    faces = np.zeros([len(units) * __faces_per_cube, 3]).astype('int')
+    scalars = np.zeros([len(units) * __scalars_per_cube, 3])
+
+    current_index = 0
+
+    for unit in units:
+        floor = unit.from_meters + level
+        height = unit.to_meters - unit.from_meters
+        if (height < 0.001):
+            continue
+
+        (x, y, _) = structure.get_centroid(
+            unit.footprint_subscripts.i, unit.footprint_subscripts.j, 0)
+
+        (current_vertices, current_faces) = __get_cube_draw(x, y, floor, height,
+                                                            block_size_x, block_size_y, current_index)
+
+        vertices[current_index * __vertices_per_cube:(
+            current_index+1) * __vertices_per_cube, :] = current_vertices
+        faces[current_index *
+              __faces_per_cube:(current_index+1) * __faces_per_cube, :] = current_faces
+        scalars[current_index *
+                __scalars_per_cube:(current_index+1) * __scalars_per_cube, :] = unit.period_id
+        current_index = current_index + 1
+
+    footprint_mesh = pv.make_tri_mesh(vertices, faces)
+    footprint_mesh['values'] = scalars
+    footprint_mesh.set_active_scalars('values')
+    return footprint_mesh
+
+
+def get_dxf_mesh_from_mesh(mesh: PolyData):
+    vertices = np.array(mesh.points)
+    faces = np.array(mesh.faces)
+    return Models.utils.get_dxf_mesh(vertices, faces)
+
+
+def export_footprint_mesh(x_values: np.ndarray, y_values: np.ndarray, floors: np.ndarray,
+                          heights: np.ndarray, x_size: float, y_size: float, filepath: str):
+    number_of_items = len(x_values)  # Numbers of elements
+    vertices = np.zeros([number_of_items * __vertices_per_cube, 3])
+    faces = np.zeros([number_of_items * __faces_per_cube, 3]).astype('int')
+
+    for current_index in np.arange(number_of_items):
+        height = heights[current_index]
+        floor = floors[current_index]
+        x = x_values[current_index]
+        y = y_values[current_index]
+
+        (current_vertices, current_faces) = __get_cube_draw(x,
+                                                            y, floor, height, x_size, y_size, current_index)
+
+        vertices[current_index * __vertices_per_cube:(
+            current_index+1) * __vertices_per_cube, :] = current_vertices
+        faces[current_index *
+              __faces_per_cube:(current_index+1) * __faces_per_cube, :] = current_faces
+
+    doc = Models.utils.create_dxf_mesh_document(vertices, faces)
+    doc.saveas(filepath)
 
 
 def __get_cube(subscripts: Tuple[int, int], structure: BlockModelStructure, height: float, current_index: int) -> Tuple[np.ndarray, np.ndarray]:
@@ -282,7 +357,7 @@ def __get_cube(subscripts: Tuple[int, int], structure: BlockModelStructure, heig
     return (vertices, faces)
 
 
-def __get_cube(x: float, y: float, floor: float, height: float, x_size: float, y_size: float, current_index: int) -> Tuple[np.ndarray, np.ndarray]:
+def __get_cube_draw(x: float, y: float, floor: float, height: float, x_size: float, y_size: float, current_index: int) -> Tuple[np.ndarray, np.ndarray]:
 
     factor = __scale_factor
     vertices = np.array([[-.5, -.5, -.5], [+.5, -.5, -.5], [+.5, +.5, -.5], [-.5, +.5, -.5],

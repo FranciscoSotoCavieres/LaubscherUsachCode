@@ -23,7 +23,7 @@ class BlockModel:
 
     def update_dataset(self, name: str, data: np.ndarray):
         # Check for dimensions
-        if self.structure.check_dimensions(data):
+        if not self.structure.check_dimensions(data):
             raise Exception('Dimension error')
         if name not in self.get_dataset_names():
             raise Exception(f'{name} doesn''t already exists')

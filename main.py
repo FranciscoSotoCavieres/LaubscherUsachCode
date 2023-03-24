@@ -7,18 +7,35 @@ from Engine.CavingProductionPlanExtractionSpeedItem import CavingProductionPlanE
 from Engine.CavingProductionPlanTargetItem import CavingProductionPlanTargetItem
 from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
 from Engine.ProductionPlanEngine import ProductionPlanEngine
-from Scripts.BestHeighPerColumn import compute_best_height_level,compute_tonnage_and_grade
-
+from Scripts.GualcamayoOptimizer import build_inclined_footprints, compute_tonnage_grade, draw_grades, compute_best_height_level, compute_best_height, generate_plan, segment_squares, stats_footprints
+import numpy as np
 if __name__ == '__main__':
+
+    print("Hello world")
+    exit()
     # Importar modelo de bloques
+    mb_path_csv = r'C:\Users\franc\bmining\BM22-AUS33-IUG GUALCAMAYO - Documentos\03 Equipo de Trabajo\09 Francisco Soto\md_gual5x5x5_nov22.csv'
+    mb_path_numpy = r'C:\Users\franc\bmining\BM22-AUS33-IUG GUALCAMAYO - Documentos\03 Equipo de Trabajo\09 Francisco Soto\Análisis Caving\md_gual5x5x5_nov22.npy'
+    mb_diluted_folder = r'C:\Users\franc\bmining\BM22-AUS33-IUG GUALCAMAYO - Documentos\03 Equipo de Trabajo\09 Francisco Soto\Análisis Caving\Dilution'
 
-    sector = 'E'
-    path_npy = rf"C:\Users\franc\bmining\BM22-AMS43-IUG CACHORRO - Documentos\03 Equipo de Trabajo\05 Francisco Soto\Caving Analylisis 29-11-2022\cax_2022_rblk_555_COMPILADO_112022_BB_{sector}.npy"
+    block_model = ft.block_model_from_npy_file(mb_path_numpy)
 
-    dilution_folder = rf"C:\Users\franc\bmining\BM22-AMS43-IUG CACHORRO - Documentos\03 Equipo de Trabajo\05 Francisco Soto\Caving Analylisis 29-11-2022\Diluted Block Model {sector}"
-    main_folder=   rf"C:\Users\franc\bmining\BM22-AMS43-IUG CACHORRO - Documentos\03 Equipo de Trabajo\05 Francisco Soto\Caving Analylisis 29-11-2022"
-    # compute_best_height_level(main_folder)
-    compute_best_height_level(main_folder)
+    au = block_model.get_data_set("AU_FINAL")
+    ore = block_model.get_data_set("ORE")
+    density = block_model.get_data_set("Density")
+
+    real_au = au * ore
+
+    logic = real_au > 0.15
+
+    mean_average = np.sum(
+        real_au[logic] * density[logic]) / (np.sum(density[logic]))
+    tonnage = np.sum(density[logic]) * 5 * 5 * 5
+
+    # generate_plan(mb_diluted_folder)
+    # build_inclined_footprints(mb_diluted_folder)
+    # segment_squares(mb_diluted_folder)
+    # stats_footprints(mb_diluted_folder)
     exit()
     block_model = ft.block_model_from_csv_file(path, "X", "Y", "Z")
     data_sets = block_model.get_dataset_names()

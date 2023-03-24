@@ -77,7 +77,7 @@ class BlockModelStructure:
             output[dataset_name] = array
         return output
 
-    def clam_subscripts(self, i: int, j: int, k: int):
+    def clamp_subscripts(self, i: int, j: int, k: int):
         if (i >= self.shape[0]):
             i = self.shape[0] - 1
         elif (i < 0):

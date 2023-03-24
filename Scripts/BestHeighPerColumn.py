@@ -99,7 +99,7 @@ def init_study(block_model_npy_path: str, block_model_dilution_folder: str, sect
     for i in range(to_z-10):
 
         file_name = block_model_dilution_folder + \
-            f"\{sector} {i:000} diluted.npy"
+            f"\{sector} {i:03d} diluted.npy"
         level_block_model = ft.block_model_from_level(crop_block_model, i)
         block_model_dilution_engine = BlockModelDilution(
             50, level_block_model.structure)
