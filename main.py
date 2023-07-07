@@ -7,7 +7,7 @@ from Engine.CavingProductionPlanExtractionSpeedItem import CavingProductionPlanE
 from Engine.CavingProductionPlanTargetItem import CavingProductionPlanTargetItem
 from Engine.CavingProductionPlanTarget import CavingProductionPlanTarget
 from Engine.ProductionPlanEngine import ProductionPlanEngine
-from Scripts.GualcamayoOptimizer import build_inclined_footprints, compute_tonnage_grade, draw_grades, compute_best_height_level, compute_best_height, generate_plan, segment_squares, stats_footprints
+from Scripts.Optimizer import build_inclined_footprints, compute_tonnage_grade, draw_grades, compute_best_height_level, compute_best_height, generate_plan, segment_squares, stats_footprints
 import numpy as np
 if __name__ == '__main__':
 
