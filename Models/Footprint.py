@@ -1,7 +1,9 @@
 import numpy as np
 from openpyxl import Workbook
 from Models.BlockModelStructure import BlockModelStructure
+from Models.BlockModel import BlockModel
 from Models.excel_utils import export_matrix, remove_default_worksheet
+
 
 index_keyword = 'Index'
 height_keyword = 'Height'
@@ -99,3 +101,6 @@ class Footprint:
                 slope_percentage = 100 * ((ew ** 2)+(ns ** 2)) ** 0.5
                 slope_percentage_matrix[i, j] = slope_percentage
         return slope_percentage_matrix
+    
+
+        

@@ -90,3 +90,10 @@ def remove_default_worksheet(workbook: Workbook):
     :param workbook: Workbook
     """
     workbook.remove(workbook['Sheet'])
+
+
+
+def export_matrix_to_excel(array2d: np.ndarray ,excel_path:str):
+    workbook = Workbook()
+    export_matrix(array2d,workbook,"matrix")
+    workbook.save(excel_path)

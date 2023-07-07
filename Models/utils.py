@@ -307,3 +307,42 @@ def get_dxf_mesh(vertices: np.ndarray, faces: np.ndarray):
         mesh_data.vertices = vertices
         mesh_data.faces = new_faces
     return mesh
+
+def get_average_from_footprint(footprint:Footprint,block_model:BlockModel,data_set_name:str,weight_data_set_name):
+        values_data_set = block_model.get_data_set(data_set_name)
+        weight_data_set = block_model.get_data_set(weight_data_set_name)
+        
+        m = footprint.structure.shape[0]
+        n = footprint.structure.shape[1]
+        
+        
+        output = np.zeros((m,n))
+        for i in np.arange(m):
+            for j in np.arange(n):
+                index  = footprint.footprint_indices[i,j]
+                values = values_data_set[i,j]
+                weights = weight_data_set[i,j]
+                
+                average_value = get_average(0,index,values,weights)
+                output[i,j] = average_value
+                
+        return output
+
+
+def get_summation_from_footprint(footprint:Footprint,block_model:BlockModel,data_set_name:str):
+    values_data_set = block_model.get_data_set(data_set_name)
+           
+    m = footprint.structure.shape[0]
+    n = footprint.structure.shape[1]
+        
+        
+    output = np.zeros((m,n))
+    for i in np.arange(m):
+        for j in np.arange(n):
+            index  = footprint.footprint_indices[i,j]
+            values = values_data_set[i,j]
+                         
+            average_value = get_summation(0,index,values)
+            output[i,j] = average_value
+                
+    return output

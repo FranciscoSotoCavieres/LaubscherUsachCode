@@ -65,7 +65,7 @@ def draw_voxels(block_model: BlockModel, data_set_name: str, min_value: float):
     data_set = block_model.get_data_set(data_set_name)
     volume = vedo.Volume(data_set)
     lego = volume.legosurface(vmin=min_value)
-    lego.cmap('jet', vmin=min_value, vmax=2*min_value)
+    #lego.cmap('jet')
 
     lego.show(axes=1)
 
@@ -84,16 +84,17 @@ def grid(block_model: BlockModel, data_set: str):
 
     # Add the data values to the cell data
     grid.cell_data["values"] = values.flatten(order="F")
-
     grid.contour().plot(show_bounds=True)
 
     # Now plot the grid!
     # grid.plot(show_edges=True)
 
 
-def contours(block_model: BlockModel, data_set: str):
+def contours(block_model: BlockModel, data_set: str, levels:list[float]):
     values = block_model.get_data_set(data_set)
     structure = block_model.structure
+    
+
 
     start_x = structure.offset[0] - structure.block_size[0]
     end_x = start_x + (structure.shape[0]) * structure.block_size[0]
@@ -109,10 +110,10 @@ def contours(block_model: BlockModel, data_set: str):
 
     (x, y, z) = mgrid[start_x:end_x:delta_x,
                       start_y:end_y:delta_y, start_z:end_z:delta_z]
-    grid = pv.StructuredGrid(x, y, z)
+    grid = pv.StructuredGrid(x, y, z,force_float=False)
 
-    grid['vol'] = values.flatten(order='F')
-    grid.contour([0.5, 0.7, 1.2]).plot()
+    grid['vol'] = values.astype(float).flatten(order='F')
+    grid.contour(levels).plot()
 
 
 def draw_footprint(footprint: Footprint, blockmodel: BlockModel, values_2d: np.ndarray = np.array([])):
@@ -152,15 +153,6 @@ def draw_footprint(footprint: Footprint, blockmodel: BlockModel, values_2d: np.n
     footprint_mesh['values'] = values
     footprint_mesh.plot(show_axes=True, show_bounds=True, cmap='jet')
     return
-    surf = pv.PolyData(vertices, faces)
-
-    # surf['values'] = values
-
-    # plot each face with a different color
-    # scalars=np.arange(3)
-    surf.plot()
-    print('hola')
-
 
 def draw_columns_from_arrays(x_values: np.ndarray, y_values: np.ndarray, floors: np.ndarray,
                              heights: np.ndarray, x_size: float, y_size: float,
