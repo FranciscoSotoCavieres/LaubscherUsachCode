@@ -10,6 +10,7 @@ def valorization(block_model: BlockModel):
 
     cut_key = "Cut"
     density_key = "Density"
+    recovery_key = "Recu"
     copper_price = 3.2 * 2204.5  # USD/t
     refining_cost = .15 * 2204.5  # USD/t
     mining_cost = 8  # USD/t
@@ -27,11 +28,12 @@ def valorization(block_model: BlockModel):
     # Get the datasets
     cut = block_model.get_data_set(cut_key)
     density = block_model.get_data_set(density_key)
+    recovery = block_model.get_data_set(recovery_key)
 
     # Compute tonnage
     tonnage = density * block_volume
 
-    value_array = ((copper_price - refining_cost) * cut / 100 -
+    value_array = ((copper_price - refining_cost) * cut / 100 * recovery / 100 -
                    (mining_cost + processing_cost+investment_cost+general_cost)) * tonnage
 
     for i in np.arange(shape[0]):
